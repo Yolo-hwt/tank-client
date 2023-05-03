@@ -1,5 +1,6 @@
 //全局变量引入
-import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE } from "@/hook/globalParams";
+import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE, GAME_MODE } from "@/hook/globalParams";
+const { ONLINE_GAME } = GAME_MODE
 const { UP, DOWN, LEFT, RIGHT } = DIRECT;
 const { RESOURCE_IMAGE } = PICTURES();
 const { PLAYER_DESTROY_AUDIO, ATTACK_AUDIO, TANK_DESTROY_AUDIO } = SOUNDS
@@ -14,6 +15,7 @@ import { Bullet } from "@/gameClass/bullet"
  * @returns
  */
 export const Tank = function (gameInstance) {
+	// this.ctx = gameInstance.tankCtx;
 	this.x = 0;
 	this.y = 0;
 	this.size = 32;//坦克的大小
@@ -153,9 +155,9 @@ export const Tank = function (gameInstance) {
 			if (!this.isAI) {
 				ATTACK_AUDIO.play();
 			}
-			this.bullet.draw();
 			//将子弹加入的子弹数组中
 			this.gameCtx.bulletArray.push(this.bullet);
+			this.bullet.draw();
 			this.isShooting = true;
 		}
 	};
@@ -168,7 +170,14 @@ export const Tank = function (gameInstance) {
 		this.gameCtx.crackArray.push(new CrackAnimation(CRACK_TYPE_TANK, this.ctx, this));
 		TANK_DESTROY_AUDIO.play();
 	};
-
+	//绘制出现前的图片
+	this.drawAppearBefore = function (temp, x, y) {
+		this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, x, y, 32, 32);
+	}
+	//绘制出现后
+	this.drawAppearAfter = function (x, y, dir, tankType) {
+		this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy" + tankType][0] + dir * this.size, POS["enemy" + tankType][1], 32, 32, x, y, 32, 32);
+	}
 
 
 };
@@ -192,6 +201,7 @@ SelectTank.prototype = new Tank();
  */
 
 export const PlayTank = function (gameInstance) {
+	this.gameInstance = gameInstance;
 	this.ctx = gameInstance.tankCtx;
 	this.lives = 3;//生命值
 	this.isProtected = true;//是否受保护
@@ -200,19 +210,35 @@ export const PlayTank = function (gameInstance) {
 	this.speed = 2;//坦克的速度
 	this.gameCtx = gameInstance;
 	//坦克绘制方法
-	this.draw = function () {
+	//根据服务器发送的数据来绘制
+	//联网模式下使用dataobj数据同步本地，并绘制
+	this.draw = function (dataobj) {
+		if (dataobj !== undefined && dataobj !== null) {
+			const { dir, x, y, isProtected, protectedTime } = dataobj;
+			this.dir = dir;
+			this.x = x;
+			this.y = y;
+			this.isProtected = isProtected;
+			this.protectedTime = protectedTime;
+		}
 		this.hit = false;
 		this.ctx.drawImage(RESOURCE_IMAGE, POS["player"][0] + this.offsetX + this.dir * this.size, POS["player"][1], this.size, this.size, this.x, this.y, this.size, this.size);
 		if (this.isProtected) {
-			var temp = parseInt((500 - this.protectedTime) / 5) % 2;
+			let temp = parseInt((500 - this.protectedTime) / 5) % 2;
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["protected"][0], POS["protected"][1] + 32 * temp, 32, 32, this.x, this.y, 32, 32);
-			this.protectedTime--;
-			if (this.protectedTime == 0) {
-				this.isProtected = false;
+			//联网模式下的时间计算交给服务器
+			//单机游戏模式下开启
+			// /console.log(this.gameInstance.gameMode);
+			if (!(this.gameInstance.gameMode == ONLINE_GAME)) {
+				//console.log(111);
+				this.protectedTime--;
+				if (this.protectedTime == 0) {
+					this.isProtected = false;
+				}
 			}
 		}
-
 	};
+
 
 	this.distroy = function () {
 		this.isDestroyed = true;
@@ -277,6 +303,7 @@ export const EnemyOne = function (gameInstance) {
 			this.move(this.gameCtx);
 		}
 	};
+
 };
 EnemyOne.prototype = new Tank();
 
@@ -318,6 +345,15 @@ export const EnemyTwo = function (gameInstance) {
 			this.move(this.gameCtx);
 		}
 	};
+	//根据服务器返回数据来绘制
+	this.drawByServerData = function (times, isAppear, x, y, dir) {
+		if (!isAppear) {
+			let temp = parseInt(times / 5) % 7;
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, x, y, 32, 32);
+		} else {
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy2"][0] + dir * this.size, POS["enemy2"][1], 32, 32, x, y, 32, 32);
+		}
+	}
 
 };
 EnemyTwo.prototype = new Tank();
@@ -362,6 +398,15 @@ export const EnemyThree = function (gameInstance) {
 		}
 
 	};
+	//根据服务器返回数据来绘制
+	this.drawByServerData = function (times, isAppear, x, y, dir) {
+		if (!isAppear) {
+			let temp = parseInt(times / 5) % 7;
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, x, y, 32, 32);
+		} else {
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy3"][0] + dir * this.size, POS["enemy3"][1], 32, 32, x, y, 32, 32);
+		}
+	}
 
 };
 EnemyThree.prototype = new Tank();

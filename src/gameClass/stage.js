@@ -1,5 +1,6 @@
 //全局变量引入
-import { POS, PICTURES, SOUNDS } from "../hook/globalParams";
+import { POS, PICTURES, SOUNDS, GAME_MODE } from "../hook/globalParams";
+const { ONLINE_GAME } = GAME_MODE
 const { RESOURCE_IMAGE } = PICTURES();
 const { START_AUDIO } = SOUNDS
 //hook，事件总线引入
@@ -9,9 +10,9 @@ import { initMap } from "@/hook/localGameLogic";
 //外部类引入
 import { Num } from "./num"
 //socket类引入
-import { SyncDataMsg, SocketMessage, MSG_TYPE_CLIENT, SYNC_DATA_TYPE } from "@/socket/socketMessage"
+import { SyncMsg, SocketMessage, MSG_TYPE_CLIENT, SYNC_CLIENT_TYPE } from "@/socket/socketMessage"
 const { MSG_SYNC } = MSG_TYPE_CLIENT;
-const { STAGE_ISREADY } = SYNC_DATA_TYPE
+const { STAGE_ISREADY } = SYNC_CLIENT_TYPE
 
 export const Stage = function (gameInstance) {
 	this.gameInstance = gameInstance;
@@ -31,9 +32,16 @@ export const Stage = function (gameInstance) {
 		this.temp = 0;
 	};
 
-	this.draw = function () {
-		if (this.dir == 1) {
+	this.draw = function (refers) {
+		let level, maxEnemy, p1Lives, p2Lives;
+		if (refers) {
+			level = refers.level;
+			maxEnemy = refers.maxEnemy;
+			p1Lives = refers.p1Lives;
+			p2Lives = refers.p2Lives;
+		}
 
+		if (this.dir == 1) {
 			//temp = 15*15 灰色屏幕已经画完
 			if (this.temp == 225) {
 				//78,14为STAGE字样在图片资源中的宽和高，194,208为canvas中的位置
@@ -42,11 +50,11 @@ export const Stage = function (gameInstance) {
 				this.levelNum.draw(this.level, 308, 208);
 				//this.ctx.drawImage(RESOURCE_IMAGE,POS["num"][0]+this.level*14,POS["num"][1],14, 14,308, 208,14, 14);
 				//绘制地图
-				initMap(this.gameInstance)
+				initMap(this.gameInstance, level, maxEnemy, p1Lives, p2Lives)
 			} else if (this.temp == 225 + 600) {
 				//600即调用了600/15次，主要用来停顿
 				this.temp = 225;
-				this.dir = -1;
+				this.dir = -1;//切换方向，灰屏退出
 				START_AUDIO.play();
 			} else {
 				this.ctx.fillRect(0, this.temp, 512, this.drawHeigth);
@@ -61,14 +69,12 @@ export const Stage = function (gameInstance) {
 				//全部清除标识切换为true
 				this.isReady = true;
 				//联网模式还需要同步服务端
-				if (this.gameInstance.gameMode) {
+				if (this.gameInstance.gameMode == ONLINE_GAME) {
 					//提取状态变量生成消息体
-					const msg = new SyncDataMsg("sync_stage_isready", STAGE_ISREADY, { isReady: this.isReady })
+					const msg = new SyncMsg("sync_stage_isready", STAGE_ISREADY, { isReady: this.isReady })
 					//包装消息体为客户端消息
 					const content = new SocketMessage("client", this.gameInstance.clientName, MSG_SYNC, msg);
-					//console.log(code, content);
 					//发送到服务器
-					// wsSocket.sendMsg(content);
 					eventBus.emit('sendtoserver', content)
 				}
 			}

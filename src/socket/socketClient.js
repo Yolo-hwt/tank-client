@@ -1,5 +1,6 @@
 import { eventBus } from "@/hook/eventBus";
 import { socketMsgHandler } from "@/hook/socketGameLogic"
+import { setTimeout } from "core-js";
 export class MyWebSocket extends WebSocket {
     constructor(url, gameInstance, protocols) {
         super(url, protocols);
@@ -30,14 +31,15 @@ export class MyWebSocket extends WebSocket {
     }
 
     messageHandler(e) {
+        //用异步保证后来的消息一定是排队在正确位置
+        //即等待上一条消息执行之后，再执行它
         let data = this.getMsg(e)
-        if (data.text) {
-            console.log('get msg from server:', data);
-        }
-
-
-
-        socketMsgHandler(data, this.gameInstance)
+        setTimeout(() => {
+            if (data.text) {
+                console.log('get msg from server:', data);
+            }
+            socketMsgHandler(data, this.gameInstance)
+        }, 0);
     }
 
     closeHandler() {//socket关闭

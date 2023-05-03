@@ -22,13 +22,26 @@ import { EnemyOne, EnemyTwo, EnemyThree } from "@/gameClass/tank";
 import { Prop } from "@/gameClass/prop";
 
 //初始化地图
-export const initMap = function (gameInstance) {
-    gameInstance.map.setMapLevel(gameInstance.level);
-    gameInstance.map.draw();
-    drawLives(gameInstance);
+export const initMap = function (gameInstance, level, maxEnemy, p1Lives, p2Lives) {
+    gameInstance.map.setMapLevel(level);
+    gameInstance.map.draw(maxEnemy);
+    drawLives(gameInstance, { p1Lives, p2Lives });
 }
 //绘制坦克生命数
-const drawLives = function (gameInstance) {
+export const drawLives = function (gameInstance, dataobj) {
+    let p1Lives = null, p2Lives = null;
+    if (dataobj) {
+        p1Lives = dataobj.p1Lives;
+        p2Lives = dataobj.p2Lives;
+    }
+    //同步服务器数据
+    if (p1Lives && gameInstance.player1.lives != p1Lives) {
+        gameInstance.player1.lives = p1Lives;
+    }
+    if (p2Lives && gameInstance.player2.lives != p2Lives) {
+        gameInstance.player2.lives = p2Lives;
+    }
+
     gameInstance.map.drawLives(gameInstance.player1.lives, 1);
     gameInstance.map.drawLives(gameInstance.player2.lives, 2);
 }
@@ -180,7 +193,7 @@ export const drawAll = function (gameInstance) {
     if (gameInstance.player2.lives > 0) {
         gameInstance.player2.draw();
     }
-    drawLives(gameInstance);
+    drawLives(gameInstance, gameInstance.player1.lives, gameInstance.player2.lives);
     //敌方坦克添加
     if (gameInstance.appearEnemy < gameInstance.maxEnemy) {
         //主循环20ms一次，递增mainframe到100，即2000ms，2s添加一次敌方坦克

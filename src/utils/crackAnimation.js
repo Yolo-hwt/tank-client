@@ -39,4 +39,8 @@ export const CrackAnimation = function (type, context, crackObj) {
 			this.isOver = true;
 		}
 	};
+
+	this.drawByServerData = function (posName, x, y, temp) {
+		this.ctx.drawImage(RESOURCE_IMAGE, POS[posName][0] + temp * this.size, POS[posName][1], this.size, this.size, x, y, this.size, this.size);
+	}
 };

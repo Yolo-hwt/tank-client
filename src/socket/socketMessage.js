@@ -1,4 +1,4 @@
-/**************客户端消息类型**/
+/**************客户端消息类型******************/
 export const MSG_TYPE_CLIENT = {
     MSG_NORMAL: 'normal',   //普通消息
     MSG_SYNC: 'syncdata',   //同步客户端数据到服务器
@@ -11,25 +11,72 @@ export const KEY_EVENT_TYPE = {
     KEY_EVENT_UP: 'keyup',
 }
 //syncdata同步数据类型
-export const SYNC_DATA_TYPE = {
+export const SYNC_CLIENT_TYPE = {
     STAGE_ISREADY: 'stage.isReady',
 }
 
-/************服务器消息类型***/
+/************服务器消息类型*************************/
 export const MSG_TYPE_SERVER = {
-    MSG_OPERA_DRAW: "opera_draw"
+    MSG_OPERA_DRAW: "opera_draw",
+    MSG_SYNC_SERVER: "sync_server_data",    //同步服务器端数据
+    MSG_OPERA_AUDIO: "opera_audio",
+    MSG_OPERA_CLEAR: "opera_clear"
+}
+export const OPERA_CLEAR_TYPE = {
+    TANKCTX_CLEAR: 'tanctx_clear',
+    OVERCTX_CLEAR: "overctx_clear"
 }
 //绘制操作类型，以绘制目标作为区分
 //对应drawMsg中的drawType
 export const OPERA_DRAW_TYPE = {
     MENU_DRAW: 'menu_draw',
     STAGE_DRAW: 'stage_draw',
-    TANKCTX_CLEAR: 'tanctx_clear',
     PLAYER1_DRAW: 'player1_draw',
-    PLAYER2_DRAW: 'player2_draw'
+    PLAYER2_DRAW: 'player2_draw',
+    LIVES_DRAW: 'lives_draw',
+    ENEMYNUM_CLEAR: 'enemynum_clear',
+    ENEMYTANK_DRAW: 'enemytank_draw',
+    TANK_BULLET_DRAW: 'tank_bullet_draw',
+    PLAYER_BULLET_DRAW: 'player_bullet_draw',
+    TANKBEFORE_DRAW: 'tankbefore_draw',
+    TANKAFTER_DRAW: 'tankafter_draw',
+    CRACK_DRAW: "crackanimation_draw",
+    BULLET_DRAW: "bullet_draw",
+    PROP_DRAW: "prop_draw",
+    OVER_DRAW: "over_draw",
+    HOMEHIT_DRAW: "homehit_draw"
 }
-
-//消息实体
+//数据同步操作
+//对应SyncMsg中的syncType
+export const SYNC_SERVER_TYPE = {
+    PLAYER1_ISPROTECTED: 'player1_isprotected',
+    PLAYER2_ISPROTECTED: 'player2_isprotected',
+    ENEMYTANK_ADD: 'add_enemyTank',
+    ENEMYTANK_REMOVE: 'remove_enemyTank',
+    BULLET_REMOVE: 'remove_bullet',
+    BULLET_SITE: 'bullet_site',
+    BULLET_CREATE: 'bullet_create',
+    MAP_UPDATE: "map_update",
+    CRACK_ADD_TANK: "add_crack_tank",
+    CRACK_ADD_PLAYER: "add_crack_player",
+    CRACK_ADD_BULLET: "add_crack_bullet",
+    CRACK_ADD: "crack_add",
+    PROP_ADD: "prop_add"
+}
+//音频播放操作
+//对应audioType/Mode
+export const OPERA_AUDIO_TYPE = {
+    //Mode
+    AUDIO_PLAY: 'audio_play',
+    AUDIO_STOP: "audio_stop",
+    //audioType
+    AUDIO_ATTACK: "audio_attack",
+    AUDIO_TANK_DESTROY: "audio_tankdestory",
+    AUDIO_PLAYER_DESTORY: "audio_playerdestory",
+    AUDIO_BULLET_DESTORY: 'audio_bulletdestory',
+    AUDIO_PROP: "audio_prop"
+}
+/*************消息实体**************************************/
 //与设备交互的消息主体，通用类
 export const SocketMessage = function (from = "", name = "", type = "", data = {}) {
     this.from = (from == undefined || from == null) ? '' : from;     //发送方为
@@ -48,7 +95,7 @@ export const HeartbeatMsg = function (msg) {
     this.date = new Date();
 }
 //同步数据消息
-export const SyncDataMsg = function (msg, syncType, refers = {}) {
+export const SyncMsg = function (msg, syncType, refers = {}) {
     NormalMsg.call(this, msg);
     this.syncType = syncType;
     this.refers = refers;

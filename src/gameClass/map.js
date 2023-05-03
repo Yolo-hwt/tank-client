@@ -23,7 +23,9 @@ export const Map = function (gameInstance) {
 	this.mapHeight = 416;
 
 	this.setMapLevel = function (level) {
-		this.level = level;
+		//兼容性判断，是否有提供更新本地数据的服务器数据
+		this.level = level ?? gameInstance.level;
+
 		var tempMap = MAPLEVELS['map' + this.level];
 		this.mapLevel = new Array();
 		for (var i = 0; i < tempMap.length; i++) {
@@ -31,14 +33,19 @@ export const Map = function (gameInstance) {
 			for (var j = 0; j < tempMap[i].length; j++) {
 				this.mapLevel[i][j] = tempMap[i][j];
 			}
-
 		}
 	};
 
 	/**
 	 * 绘制地图
 	 */
-	this.draw = function () {
+	this.draw = function (maxEnemy) {
+		//截取数据并同步本地
+		let maxEnemyNum = maxEnemy ?? gameInstance.maxEnemy;
+		if (maxEnemy && gameInstance.maxEnemy != maxEnemy) {
+			gameInstance.maxEnemy = maxEnemy;
+		}
+
 		this.wallCtx.fillStyle = "#7f7f7f";
 		this.wallCtx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		this.wallCtx.fillStyle = "#000";
@@ -58,7 +65,8 @@ export const Map = function (gameInstance) {
 			}
 		}
 		this.drawNoChange();
-		this.drawEnemyNum(gameInstance.maxEnemy);
+		this.drawEnemyNum(maxEnemyNum);
+		//由于先调用了setLevel函数，故此处绘制函数中使用的level数据满足客户端服务器一致要求，不用传参
 		this.drawLevel();
 		this.drawLives(0, 1);
 		this.drawLives(0, 2);
@@ -134,7 +142,6 @@ export const Map = function (gameInstance) {
 		this.num.draw(lives, x, y);
 		//this.wallCtx.drawImage(RESOURCE_IMAGE,POS["num"][0]+lives*14,POS["num"][1],14, 14,x, y,14, 14);
 	};
-
 	/**
 	 * 更新地图
 	 * @param indexArr 需要更新的地图索引数组，二维数组，如[[1,1],[2,2]]

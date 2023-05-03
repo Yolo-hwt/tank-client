@@ -26,6 +26,10 @@ export const Prop = function (gameInstance) {
 		this.isDestroyed = false;
 	};
 
+	this.drawByServerData = function (type, x, y) {
+		this.ctx.drawImage(RESOURCE_IMAGE, POS["prop"][0] + type * this.width, POS["prop"][1], this.width, this.height, x, y, this.width, this.height);
+	}
+
 	this.draw = function () {
 		if (this.duration > 0 && !this.isDestroyed) {
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["prop"][0] + this.type * this.width, POS["prop"][1], this.width, this.height, this.x, this.y, this.width, this.height);
