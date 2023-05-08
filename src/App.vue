@@ -17,7 +17,7 @@
 import { onMounted, onBeforeUnmount, reactive } from "vue";
 //全局参数引入
 import { STATE, KEYBOARD, GAME_MODE } from "@/hook/globalParams";
-const { GAME_STATE_MENU } = STATE;
+const { GAME_STATE_MENU ,GAME_STATE_WAIT} = STATE;
 const { LOCAL_GAME, ONLINE_GAME } = GAME_MODE;
 //类引入
 
@@ -27,13 +27,14 @@ import {
   initScreen,
   localkeydownEventHandler,
   localKeyupEventHandler,
-  gameLoop,
+  localGameLoop,
 } from "@/hook/localGameLogic";
 //在线游戏逻辑方法引入
 import {
   connectWebSocket,
   reconnectWebSocket,
   onlineKeyEventHandler,
+  onlineGameLoop,
 } from "@/hook/socketGameLogic";
 
 //hook，事件总线引入
@@ -55,7 +56,8 @@ export default {
       //游戏模式
       gameMode: ONLINE_GAME,
       //本地游戏循环计时器id
-      gameLoopId: null,
+      localGameLoopId: null,
+      onlineGameLoopId:null,
       ctx: {}, //2d画布
       wallCtx: {}, //地图画布
       grassCtx: {}, //草地画布
@@ -129,26 +131,35 @@ export default {
         }
       });
     }
+    //清除游戏循环
+    function clearGameLoop(){
+      clearInterval(gameInstance.localGameLoopId);
+      clearInterval(gameInstance.onlineGameLoopId);
+      gameInstance.localGameLoopId = null;
+      gameInstance.onlineGameLoopId = null;
+    }
     //开始游戏
     //根据gameMode动态判断
     //线上游戏连接服务器，本地游戏开启游戏循环
-    function startGame(gameMode, gameLoopId, gameInstance) {
+    function startGame(gameMode, gameInstance) {
       if (gameMode == ONLINE_GAME) {
-        if (gameLoopId) {
-          clearInterval(gameLoopId);
-          gameLoopId = null;
-        }
+        clearGameLoop()
         //在线游戏模式则连接服务器
+        //游戏状态改为wait，权限交由服务器控制
+        gameInstance.gameState = GAME_STATE_WAIT;
         wsSocket = connectWebSocket(wsSocket, wsUrl, gameInstance);
+        if (wsSocket) {
+          //连接成功
+          //执行在线游戏的绘制循环逻辑
+        gameInstance.onlineGameLoopId = setInterval(() => {
+            onlineGameLoop(gameInstance);
+          }, 20);
+        }
       } else if (gameMode == LOCAL_GAME) {
         //本地游戏模式执行游戏循环
-        //游戏循环控制
-        if (gameLoopId) {
-          clearInterval(gameLoopId);
-          gameLoopId = null;
-        }
-        gameLoopId = setInterval(() => {
-          gameLoop(gameInstance);
+        clearGameLoop()
+        gameInstance.localGameLoopId = setInterval(() => {
+          localGameLoop(gameInstance);
         }, 20);
       }
     }
@@ -160,14 +171,13 @@ export default {
       //初始化对象
       initObject(gameInstance);
       //开始游戏
-      startGame(gameInstance.gameMode, gameInstance.gameLoopId, gameInstance);
-
+      startGame(gameInstance.gameMode, gameInstance);
       //键盘事件监听
       keyEventListener(gameInstance, KEYBOARD);
     });
 
     onBeforeUnmount(() => {
-      clearInterval(gameInstance.gameLoopId);
+      clearInterval(gameInstance.localGameLoopId);
       eventsOff();
     });
     /* 

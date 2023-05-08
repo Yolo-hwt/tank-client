@@ -10,6 +10,10 @@ import { CrackAnimation } from "@/utils/crackAnimation"
 import { tankMapCollision } from "@/utils/Collision"
 //外部类引入
 import { Bullet } from "@/gameClass/bullet"
+//socket类引入
+import { SyncMsg, SocketMessage, MSG_TYPE_CLIENT, SYNC_CLIENT_TYPE } from "@/socket/socketMessage"
+//hook，事件总线引入
+import { eventBus } from "@/hook/eventBus";
 /**
  * 坦克基类
  * @returns
@@ -212,7 +216,11 @@ export const PlayTank = function (gameInstance) {
 	//坦克绘制方法
 	//根据服务器发送的数据来绘制
 	//联网模式下使用dataobj数据同步本地，并绘制
-	this.draw = function (dataobj) {
+	//tankIndex:1/2/...用于发送给服务器区分
+	this.draw = function (tankIndex, dataobj) {
+		if (this.lives <= 0) {
+			return;
+		}
 		if (dataobj !== undefined && dataobj !== null) {
 			const { dir, x, y, isProtected, protectedTime } = dataobj;
 			this.dir = dir;
@@ -226,16 +234,21 @@ export const PlayTank = function (gameInstance) {
 		if (this.isProtected) {
 			let temp = parseInt((500 - this.protectedTime) / 5) % 2;
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["protected"][0], POS["protected"][1] + 32 * temp, 32, 32, this.x, this.y, 32, 32);
-			//联网模式下的时间计算交给服务器
-			//单机游戏模式下开启
-			// /console.log(this.gameInstance.gameMode);
-			if (!(this.gameInstance.gameMode == ONLINE_GAME)) {
-				//console.log(111);
-				this.protectedTime--;
-				if (this.protectedTime == 0) {
-					this.isProtected = false;
-				}
+			// if (!(this.gameInstance.gameMode == ONLINE_GAME)) {
+			this.protectedTime--;
+			if (this.protectedTime == 0) {
+				this.isProtected = false;
+				//通知服务器变更玩家状态
+				const content = new SocketMessage(
+					"client",
+					this.gameInstance.clientName,
+					MSG_TYPE_CLIENT.MSG_SYNC,
+					new SyncMsg("player_protected_change", SYNC_CLIENT_TYPE.PLAYER_PROTECTED, { index: tankIndex, value: this.isProtected })
+				);
+				//发送到服务器
+				eventBus.emit('sendtoserver', content)
 			}
+			//}
 		}
 	};
 
@@ -258,6 +271,7 @@ export const PlayTank = function (gameInstance) {
 		} else {
 			temp = 256;
 		}
+		// console.log('mapOffsetx', this.gameCtx.map.offsetX, 'temp', temp);
 		this.x = temp + this.gameCtx.map.offsetX;
 		this.y = 385 + this.gameCtx.map.offsetY;
 	};
@@ -303,6 +317,29 @@ export const EnemyOne = function (gameInstance) {
 			this.move(this.gameCtx);
 		}
 	};
+
+	this.onlineDraw = function (tankIndex) {
+		if (!this.isAppear) {
+			this.times++;
+			var temp = parseInt(this.times / 5) % 7;
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, this.x, this.y, 32, 32);
+			if (this.times == 34) {
+				this.isAppear = true;
+				this.times = 0;
+				//通知服务器坦克已经appear
+				const content = new SocketMessage(
+					"client",
+					this.gameCtx.clientName,
+					MSG_TYPE_CLIENT.MSG_SYNC,
+					new SyncMsg("enemy_isappear_change", SYNC_CLIENT_TYPE.ENEMY_ISAPPEAR, { index: tankIndex, value: this.isAppear })
+				);
+				//发送到服务器
+				eventBus.emit('sendtoserver', content)
+			}
+		} else {
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy1"][0] + this.dir * this.size, POS["enemy1"][1], 32, 32, this.x, this.y, 32, 32);
+		}
+	}
 
 };
 EnemyOne.prototype = new Tank();
@@ -352,6 +389,29 @@ export const EnemyTwo = function (gameInstance) {
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, x, y, 32, 32);
 		} else {
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy2"][0] + dir * this.size, POS["enemy2"][1], 32, 32, x, y, 32, 32);
+		}
+	}
+
+	this.onlineDraw = function (tankIndex) {
+		if (!this.isAppear) {
+			this.times++;
+			var temp = parseInt(this.times / 5) % 7;
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, this.x, this.y, 32, 32);
+			if (this.times == 34) {
+				this.isAppear = true;
+				this.times = 0;
+				//通知服务器坦克已经appear
+				const content = new SocketMessage(
+					"client",
+					this.gameCtx.clientName,
+					MSG_TYPE_CLIENT.MSG_SYNC,
+					new SyncMsg("enemy_isappear_change", SYNC_CLIENT_TYPE.ENEMY_ISAPPEAR, { index: tankIndex, value: this.isAppear })
+				);
+				//发送到服务器
+				eventBus.emit('sendtoserver', content)
+			}
+		} else {
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy2"][0] + this.dir * this.size, POS["enemy2"][1], 32, 32, this.x, this.y, 32, 32);
 		}
 	}
 
@@ -405,6 +465,28 @@ export const EnemyThree = function (gameInstance) {
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, x, y, 32, 32);
 		} else {
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy3"][0] + dir * this.size, POS["enemy3"][1], 32, 32, x, y, 32, 32);
+		}
+	}
+	this.onlineDraw = function (tankIndex) {
+		if (!this.isAppear) {
+			this.times++;
+			var temp = parseInt(this.times / 5) % 7;
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, this.x, this.y, 32, 32);
+			if (this.times == 34) {
+				this.isAppear = true;
+				this.times = 0;
+				//通知服务器坦克已经appear
+				const content = new SocketMessage(
+					"client",
+					this.gameCtx.clientName,
+					MSG_TYPE_CLIENT.MSG_SYNC,
+					new SyncMsg("enemy_isappear_change", SYNC_CLIENT_TYPE.ENEMY_ISAPPEAR, { index: tankIndex, value: this.isAppear })
+				);
+				//发送到服务器
+				eventBus.emit('sendtoserver', content)
+			}
+		} else {
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy3"][0] + this.dir * this.size, POS["enemy3"][1], 32, 32, this.x, this.y, 32, 32);
 		}
 	}
 

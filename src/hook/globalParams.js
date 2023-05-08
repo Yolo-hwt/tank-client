@@ -77,6 +77,7 @@ export const PICTURES = () => {
 
 /**************游戏状态*****************/
 export const STATE = {
+    GAME_STATE_WAIT: -1,
     GAME_STATE_MENU: 0,
     GAME_STATE_INIT: 1,
     GAME_STATE_START: 2,

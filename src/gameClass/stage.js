@@ -66,14 +66,18 @@ export const Stage = function (gameInstance) {
 				this.ctx.clearRect(0, this.temp, 512, this.drawHeigth);
 				this.ctx.clearRect(0, 448 - this.temp - this.drawHeigth, 512, this.drawHeigth);
 			} else {
-				//全部清除标识切换为true
+				//ready标识切换为true
 				this.isReady = true;
 				//联网模式还需要同步服务端
 				if (this.gameInstance.gameMode == ONLINE_GAME) {
 					//提取状态变量生成消息体
-					const msg = new SyncMsg("sync_stage_isready", STAGE_ISREADY, { isReady: this.isReady })
 					//包装消息体为客户端消息
-					const content = new SocketMessage("client", this.gameInstance.clientName, MSG_SYNC, msg);
+					const content = new SocketMessage(
+						"client",
+						this.gameInstance.clientName,
+						MSG_SYNC,
+						new SyncMsg("sync_stage_isready", STAGE_ISREADY, { isReady: this.isReady })
+					);
 					//发送到服务器
 					eventBus.emit('sendtoserver', content)
 				}

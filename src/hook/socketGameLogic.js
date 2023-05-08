@@ -1,17 +1,27 @@
 //全局参数引入
-import { NecessarykeyCode, SCREEN, DIRECT, SOUNDS, POS, PICTURES } from "@/hook/globalParams";
+import { NecessarykeyCode, SCREEN, DIRECT, SOUNDS, POS, PICTURES, STATE, CRACK_TYPE } from "@/hook/globalParams";
 const { SCREEN_HEIGHT, SCREEN_WIDTH } = SCREEN
 const { DOWN } = DIRECT
 const { ATTACK_AUDIO, TANK_DESTROY_AUDIO, PLAYER_DESTROY_AUDIO, BULLET_DESTROY_AUDIO, PROP_AUDIO } = SOUNDS
 const { RESOURCE_IMAGE } = PICTURES()
+const {
+    GAME_STATE_MENU,
+    GAME_STATE_INIT,
+    GAME_STATE_OVER,
+    GAME_STATE_START,
+    GAME_STATE_WIN,
+    GAME_STATE_WAIT
+} = STATE;
 //socketMessage参数引入
 import {
     SocketMessage,
+    SyncMsg,
     KeyEventMsg,
     OPERA_DRAW_TYPE,
     MSG_TYPE_SERVER,
     MSG_TYPE_CLIENT,
     SYNC_SERVER_TYPE,
+    SYNC_CLIENT_TYPE,
     OPERA_AUDIO_TYPE,
     OPERA_CLEAR_TYPE
 } from "@/socket/socketMessage";
@@ -24,7 +34,7 @@ import { EnemyOne, EnemyTwo, EnemyThree } from "@/gameClass/tank";
 //hook，事件总线引入
 import { eventBus } from "./eventBus";
 //local本地方法引入/外部类引入
-import { drawLives } from "./localGameLogic"
+import { drawLives, initObject, nextLevel } from "./localGameLogic"
 import { Bullet } from "@/gameClass/bullet";
 import { Prop } from "@/gameClass/prop"
 import { CrackAnimation } from "@/utils/crackAnimation";
@@ -135,6 +145,7 @@ const operaDrawHandler = function (obj, gameInstance) {
             break;
         }
         case OPERA_DRAW_TYPE.ENEMYNUM_CLEAR: {
+            // console.log(refers);
             gameInstance.map.clearEnemyNum(refers.maxEnemy, refers.appearEnemy);
             break;
         }
@@ -149,8 +160,16 @@ const operaDrawHandler = function (obj, gameInstance) {
             break;
         }
         case OPERA_DRAW_TYPE.BULLET_DRAW: {
-            const { dir, x, y, bulletIndex } = refers
-            gameInstance.bulletArray[bulletIndex].drawByServerData(dir, x, y)
+            //    const { dir, x, y, bulletIndex } = refers
+            //gameInstance.bulletArray[bulletIndex].drawByServerData(dir, x, y)
+
+            const { bulletIndex, x, y } = refers
+            // console.log(bulletIndex, gameInstance.bulletArray[bulletIndex]);
+            if (bulletIndex != undefined || bulletIndex != null) {
+                gameInstance.bulletArray[bulletIndex].x = x;
+                gameInstance.bulletArray[bulletIndex].y = y;
+            }
+            //console.log("index:", bulletIndex, "array:", gameInstance.bulletArray);
             break
         }
         case OPERA_DRAW_TYPE.CRACK_DRAW: {
@@ -202,16 +221,10 @@ const operaSyncHandler = function (obj, gameInstance) {
     const type = obj.syncType ?? "";
     const refers = obj?.refers;
     switch (type) {
-        // case PLAYER1_ISPROTECTED: {
-        //     gameInstance.player1.isProtected = refers.isProtected
-        //     gameInstance.player1.protectedTime = refers.protectedTime
-        //     break;
-        // }
-        // case PLAYER2_ISPROTECTED: {
-        //     gameInstance.player2.isProtected = refers.isProtected
-        //     gameInstance.player2.protectedTime = refers.protectedTime
-        //     break;
-        // }
+        case SYNC_SERVER_TYPE.BASIC_DATA_SERVER: {
+            syncBasicDataByServerData(refers, gameInstance)
+            break;
+        }
         case SYNC_SERVER_TYPE.ENEMYTANK_ADD: {
             const enemyobj = refers;
             addEnemyTankByServerData(enemyobj, gameInstance);
@@ -228,8 +241,8 @@ const operaSyncHandler = function (obj, gameInstance) {
             break
         }
         case SYNC_SERVER_TYPE.BULLET_CREATE: {
-            const { tankIndex, type, dir } = refers;
-            addBulletByServerData(gameInstance, tankIndex, type, dir)
+            const { tankIndex, type, dir, tempX, tempY } = refers;
+            addBulletByServerData(gameInstance, tankIndex, type, dir, tempX, tempY)
             break
         }
         case SYNC_SERVER_TYPE.MAP_UPDATE: {
@@ -238,13 +251,52 @@ const operaSyncHandler = function (obj, gameInstance) {
             break
         }
         case SYNC_SERVER_TYPE.CRACK_ADD: {
-            const { crackType, bulletIndex } = refers;
-            let bulletItem = gameInstance.bulletArray[bulletIndex];
-            gameInstance.crackArray.push(new CrackAnimation(crackType, gameInstance.tankCtx, bulletItem.owner))
+            addCrackByServerData(gameInstance, refers)
             break
         }
         case SYNC_SERVER_TYPE.PROP_ADD: {
             gameInstance.prop = new Prop(gameInstance);
+            break;
+        }
+        case SYNC_SERVER_TYPE.KEYS_MANAGE: {
+            const { type, value } = refers;
+            if (type == "remove") {
+                gameInstance.keys.remove(value);
+            } else if (type == "push") {
+                gameInstance.keys.push(value);
+            }
+            break;
+        }
+        case SYNC_SERVER_TYPE.PLAYER_MOVE: {
+            const { index, dir, x, y } = refers;
+            gameInstance["player" + index].dir = dir;
+            gameInstance["player" + index].x = x;
+            gameInstance["player" + index].y = y;
+            // console.log(index, dir, x, y);
+            break;
+        }
+        case SYNC_SERVER_TYPE.BULLET_MOVE: {
+            const { index, x, y } = refers;
+            gameInstance.bulletArray[index].x = x;
+            gameInstance.bulletArray[index].y = y;
+            break;
+        }
+        case SYNC_SERVER_TYPE.AITANK_MOVE: {
+            const { index, dir, x, y } = refers;
+            gameInstance.enemyArray[index].x = x;
+            gameInstance.enemyArray[index].y = y;
+            gameInstance.enemyArray[index].dir = dir;
+            break;
+        }
+        case SYNC_SERVER_TYPE.PLAYER_RENASCENC: {
+            const { tankIndex } = refers;
+            gameInstance["player" + tankIndex].renascenc(tankIndex);
+            // console.log(gameInstance["player" + tankIndex].x);
+            break;
+        }
+        case SYNC_SERVER_TYPE.SKIP_LEVEL: {
+            const { level } = refers;
+            skipLevelByServerData(gameInstance, level)
             break;
         }
         default:
@@ -289,7 +341,17 @@ const operaAudioHandler = function (obj) {
             break;
     }
 }
+
 /***********同步数据操作辅助函数 */
+//根据数据层次同步服务器数据
+const syncBasicDataByServerData = function (dataobj, gameInstance) {
+    const { level, target, value } = dataobj;
+    if (level == 1) {
+        gameInstance[target[0]] = value;
+    } else if (level == 2) {
+        gameInstance[target[0]][target[1]] = value;
+    }
+}
 //根据服务器数据添加ai坦克
 const addEnemyTankByServerData = function (enemyobj, gameInstance) {
     //console.log(enemyobj);
@@ -303,7 +365,7 @@ const addEnemyTankByServerData = function (enemyobj, gameInstance) {
     } else if (tankType == 2) {
         obj = new EnemyThree(gameInstance);
     }
-    console.log(obj);
+    // console.log(obj);
     //根据obj填充数据
     obj.x = enemyobj.x;
     obj.y = gameInstance.map.offsetY;
@@ -324,11 +386,13 @@ const removeEnemyTankByServerData = function (removeArr, gameInstance) {
 const removeBulletByServerData = function (removeArr, gameInstance) {
     for (let index = 0; index < removeArr.length; index++) {
         const element = removeArr[index];
+        //将宿主标识改为未射击
+        gameInstance.bulletArray[element].owner.isShooting = false;
         gameInstance.bulletArray.removeByIndex(element);
     }
 }
 //添加子弹
-const addBulletByServerData = function (gameInstance, tankIndex, type, dir) {
+const addBulletByServerData = function (gameInstance, tankIndex, type, dir, tempX, tempY) {
     let tankTarget = null;
     if (type == 2) {//ai坦克
         tankTarget = gameInstance.enemyArray[tankIndex]
@@ -341,21 +405,184 @@ const addBulletByServerData = function (gameInstance, tankIndex, type, dir) {
     }
 
     //添加到子弹数组
-    tankTarget.bullet = new Bullet(tankTarget, type, dir)
+    tankTarget.bullet = new Bullet(tankTarget, type, dir, gameInstance)
+    tankTarget.bullet.x = tempX;
+    tankTarget.bullet.y = tempY;
     gameInstance.bulletArray.push(tankTarget.bullet)
 }
+//添加销毁动画
+const addCrackByServerData = function (gameInstance, refers) {
+    const { crackType } = refers;
+    let item = {};
+    if (crackType == CRACK_TYPE.CRACK_TYPE_BULLET) {
+        const { bulletIndex } = refers;
+        item == gameInstance.bulletArray[bulletIndex];
+    } else if (crackType == CRACK_TYPE.CRACK_TYPE_TANK) {
+        const { tankType, tankIndex } = refers;
+        if (tankType == 2) {//ai坦克
+            item = gameInstance.enemyArray[tankIndex]
+        } else if (tankType == 1) {//player
+            if (tankIndex == 1) {
+                item = gameInstance.player1;
+            } else if (tankIndex == 2) {
+                item = gameInstance.player2
+            }
+        }
+    }
 
-// //绘制敌方坦克，所有逻辑已经在服务器处理，此处只需绘制即可
-// const drawEnemyTanksByServerOpera = function (gameInstance) {
-//     for (let i = 0; i < gameInstance.enemyArray.length; i++) {
-//         let enemyObj = gameInstance.enemyArray[i];
-//         enemyObj.draw();
-//     }
-// }
-// //绘制子弹
-// const drawBulletsByServerOpera = function (gameInstance) {
-//     for (let i = 0; i < gameInstance.bulletArray.length; i++) {
-//         let bulletObj = gameInstance.bulletArray[i];
-//         bulletObj.drawByServerData();
-//     }
-// }
+    gameInstance.crackArray.push(new CrackAnimation(crackType, gameInstance.tankCtx, item))
+}
+//重置关卡
+const skipLevelByServerData = function (gameInstance, level) {
+    gameInstance.level = level;
+    if (gameInstance.level == 22) {
+        gameInstance.level = 1;
+    }
+    initObject(gameInstance);
+    //只有一个玩家
+    if (gameInstance.menu.playNum == 1) {
+        gameInstance.player2.lives = 0;
+    }
+    gameInstance.stage.init(gameInstance.level);
+    gameInstance.gameState = GAME_STATE_INIT;
+}
+
+
+/**
+ * 
+ **********************线上游戏循环控制
+ */
+export const onlineGameLoop = function (gameInstance) {
+    switch (gameInstance.gameState) {
+        case GAME_STATE_WAIT:
+            break;
+        case GAME_STATE_MENU:
+            gameInstance.menu.draw();
+            break;
+        case GAME_STATE_INIT:
+            gameInstance.stage.draw();
+            // if (gameInstance.stage.isReady == true) {
+            //     gameInstance.gameState = GAME_STATE_START;
+            // }
+            break;
+        case GAME_STATE_START:
+            onlineDrawAll(gameInstance);
+            if (
+                gameInstance.isGameOver ||
+                (gameInstance.player1.lives <= 0 && gameInstance.player2.lives <= 0)
+            ) {
+                gameInstance.gameState = GAME_STATE_OVER;
+                gameInstance.map.homeHit();
+                PLAYER_DESTROY_AUDIO.play();
+            }
+            break;
+        case GAME_STATE_WIN:
+            nextLevel(gameInstance);
+            break;
+        case GAME_STATE_OVER:
+            onlineGameOver(gameInstance);
+            break;
+    }
+}
+//绘制所有界面
+const onlineDrawAll = function (gameInstance) {
+    gameInstance.tankCtx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    onlineDrawPlayer(gameInstance);
+    drawLives(gameInstance);
+    //实际绘制敌方坦克
+    onlineDrawEnemyTanks(gameInstance);
+    //
+    onlineDrawBullet(gameInstance);
+    onlineDrawCrack(gameInstance);
+    // if (gameInstance.propTime <= 0) {
+    //     drawProp(gameInstance);
+    // } else {
+    //     gameInstance.propTime--;
+    // }
+    // if (gameInstance.homeProtectedTime > 0) {
+    //     gameInstance.homeProtectedTime--;
+    // } else if (gameInstance.homeProtectedTime == 0) {
+    //     gameInstance.homeProtectedTime = -1;
+    //     homeNoProtected(gameInstance);
+    // }
+}
+const onlineDrawPlayer = function (gameInstance) {
+    if (gameInstance.player1.lives > 0) {
+        gameInstance.player1.draw(1);
+    }
+    if (gameInstance.player2.lives > 0) {
+        gameInstance.player2.draw(2);
+    }
+}
+const onlineDrawEnemyTanks = function (gameInstance) {
+    //边界条件判断
+    if (gameInstance.enemyArray != null || gameInstance.enemyArray.length > 0) {
+        for (let i = 0; i < gameInstance.enemyArray.length; i++) {
+            let enemyObj = gameInstance.enemyArray[i];
+            if (enemyObj.isDestroyed) {
+                gameInstance.enemyArray.removeByIndex(i);
+                i--;
+            } else {
+                enemyObj.onlineDraw(i);
+            }
+        }
+    }
+}
+const onlineDrawBullet = function (gameInstance) {
+    if (gameInstance.bulletArray != null && gameInstance.bulletArray.length > 0) {
+        for (let i = 0; i < gameInstance.bulletArray.length; i++) {
+            let bulletObj = gameInstance.bulletArray[i];
+            if (bulletObj.isDestroyed) {
+                //bulletObj.owner.isShooting = false;
+                gameInstance.bulletArray.removeByIndex(i);
+                i--;
+            } else {
+                // console.log(bulletObj.x, bulletObj.y);
+                bulletObj.drawByServerOpera();
+            }
+        }
+    }
+}
+const onlineDrawCrack = function (gameInstance) {
+    if (gameInstance.crackArray != null && gameInstance.crackArray.length > 0) {
+        for (let i = 0; i < gameInstance.crackArray.length; i++) {
+            let crackObj = gameInstance.crackArray[i];
+            if (crackObj.isOver) {
+                gameInstance.crackArray.removeByIndex(i);
+                i--;
+                // if (crackObj.owner == gameInstance.player1) {
+                //     //gameInstance.player1.renascenc(1);
+                //     //通知客户端判断是否重生
+
+                // } else if (crackObj.owner == gameInstance.player2) {
+                //     // gameInstance.player2.renascenc(2);
+                // }
+            } else {
+                crackObj.draw();
+            }
+        }
+    }
+}
+const onlineGameOver = function (gameInstance) {
+    gameInstance.overCtx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    gameInstance.overCtx.drawImage(RESOURCE_IMAGE, POS["over"][0], POS["over"][1], 64, 32, gameInstance.overX + gameInstance.map.offsetX, gameInstance.overY + gameInstance.map.offsetY, 64, 32);
+    gameInstance.overY -= 2;
+    if (gameInstance.overY <= parseInt(gameInstance.map.mapHeight / 2)) {
+        //通知服务器结束动画绘制完毕
+        const content = new SocketMessage(
+            "client",
+            gameInstance.clientName,
+            MSG_TYPE_CLIENT.MSG_SYNC,
+            new SyncMsg("over_animation_is_ok", SYNC_CLIENT_TYPE.OVERANIMATE_ISOK)
+        );
+        //发送到服务器
+        eventBus.emit('sendtoserver', content)
+        initObject(gameInstance);
+        // //只有一个玩家
+        // if (gameInstance.menu.playNum == 1) {
+        //     gameInstance.player2.lives = 0;
+        // }
+        //等待服务器控制转为MENU状态
+        gameInstance.gameState = STATE.GAME_STATE_WAIT;
+    }
+}

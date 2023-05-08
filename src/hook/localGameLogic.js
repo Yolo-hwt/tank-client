@@ -92,8 +92,8 @@ const drawEnemyTanks = function (gameInstance) {
 //绘制子弹
 const drawBullet = function (gameInstance) {
     if (gameInstance.bulletArray != null && gameInstance.bulletArray.length > 0) {
-        for (var i = 0; i < gameInstance.bulletArray.length; i++) {
-            var bulletObj = gameInstance.bulletArray[i];
+        for (let i = 0; i < gameInstance.bulletArray.length; i++) {
+            let bulletObj = gameInstance.bulletArray[i];
             if (bulletObj.isDestroyed) {
                 bulletObj.owner.isShooting = false;
                 gameInstance.bulletArray.removeByIndex(i);
@@ -328,7 +328,7 @@ export const preLevel = function (gameInstance) {
     gameInstance.gameState = GAME_STATE_INIT;
 }
 //游戏循环控制
-export const gameLoop = function (gameInstance) {
+export const localGameLoop = function (gameInstance) {
     switch (gameInstance.gameState) {
         case GAME_STATE_MENU:
             gameInstance.menu.draw();

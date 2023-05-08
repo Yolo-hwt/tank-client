@@ -114,6 +114,7 @@ export const Map = function (gameInstance) {
 	 * @param enemyNum 已出现的敌方坦克数
 	 */
 	this.clearEnemyNum = function (totolEnemyNum, enemyNum) {
+		// console.log(totolEnemyNum, enemyNum);
 		var x = 466;
 		var y = 34 + this.offsetY;
 		if (enemyNum <= 0) {
@@ -123,6 +124,7 @@ export const Map = function (gameInstance) {
 		this.wallCtx.fillStyle = "#7f7f7f";
 		var tempX = x + (enemyNum % 2) * enemySize;
 		var tempY = y + (Math.ceil(totolEnemyNum / 2) - 1) * enemySize - (parseInt((enemyNum - 1) / 2)) * enemySize;
+		// console.log(tempX, tempY);
 		this.wallCtx.fillRect(tempX, tempY, 14, 14);
 	};
 
