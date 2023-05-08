@@ -59,6 +59,7 @@ const onlineDrawAll = function (gameInstance) {
     //
     onlineDrawBullet(gameInstance);
     onlineDrawCrack(gameInstance);
+    onlineDrawProp(gameInstance);
     // if (gameInstance.propTime <= 0) {
     //     drawProp(gameInstance);
     // } else {
@@ -143,5 +144,14 @@ const onlineGameOver = function (gameInstance) {
         // }
         //等待服务器控制转为MENU状态
         gameInstance.gameState = STATE.GAME_STATE_WAIT;
+    }
+}
+const onlineDrawProp = function (gameInstance) {
+    if (gameInstance.prop) {
+        //即使现在已经是isDestroyed=true，也要经过一次draw操作清除掉
+        gameInstance.prop.drawByServerOpera()
+        if (gameInstance.prop.isDestroyed) {
+            gameInstance.prop = null;
+        }
     }
 }

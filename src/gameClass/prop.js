@@ -17,15 +17,32 @@ export const Prop = function (gameInstance) {
 	this.isDestroyed = false;
 	this.size = 28;
 
-	this.init = function () {
-		this.ctx.clearRect(this.x, this.y, this.width, this.height);
+	this.init = function (dataobj) {
+		if (dataobj != undefined && dataobj != null) {
+			const { type, x, y } = dataobj;
+			// console.log(type, x, y);
+			this.type = type;
+			this.x = x;
+			this.y = y;
+		} else {
+			this.type = parseInt(Math.random() * 6);
+			this.x = parseInt(Math.random() * 384) + gameInstance.map.offsetX;
+			this.y = parseInt(Math.random() * 384) + gameInstance.map.offsetY;
+		}
+
 		this.duration = 600;
-		this.type = parseInt(Math.random() * 6);
-		this.x = parseInt(Math.random() * 384) + gameInstance.map.offsetX;
-		this.y = parseInt(Math.random() * 384) + gameInstance.map.offsetY;
+		this.ctx.clearRect(this.x, this.y, this.width, this.height);
 		this.isDestroyed = false;
 	};
-
+	//根据标识绘制或清除即可
+	this.drawByServerOpera = function () {
+		if (!this.isDestroyed) {
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["prop"][0] + this.type * this.width, POS["prop"][1], this.width, this.height, this.x, this.y, this.width, this.height);
+			// this.isHit();
+		} else {
+			this.ctx.clearRect(this.x, this.y, this.width, this.height);
+		}
+	}
 	this.draw = function () {
 		if (this.duration > 0 && !this.isDestroyed) {
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["prop"][0] + this.type * this.width, POS["prop"][1], this.width, this.height, this.x, this.y, this.width, this.height);

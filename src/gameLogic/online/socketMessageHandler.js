@@ -96,6 +96,7 @@ const operaSyncHandler = function (obj, gameInstance) {
         }
         case SYNC_SERVER_TYPE.PROP_ADD: {
             gameInstance.prop = new Prop(gameInstance);
+            gameInstance.prop.init(refers)
             break;
         }
         case SYNC_SERVER_TYPE.BULLET_ADD: {
@@ -128,6 +129,12 @@ const operaSyncHandler = function (obj, gameInstance) {
             // console.log(index, dir, x, y);
             break;
         }
+        case SYNC_SERVER_TYPE.PLAYER_PROTECTED: {
+            const { index, state, time } = refers;
+            gameInstance["player" + index].isProtected = state;
+            gameInstance["player" + index].protectedTime = time;
+            break;
+        }
         case SYNC_SERVER_TYPE.BULLET_MOVE: {
             const { bulletIndex, x, y } = refers
             if (bulletIndex != undefined || bulletIndex != null) {
@@ -154,6 +161,7 @@ const operaSyncHandler = function (obj, gameInstance) {
             skipLevelByServerData(gameInstance, level)
             break;
         }
+
         default:
             break;
     }
