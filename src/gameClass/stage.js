@@ -6,7 +6,7 @@ const { START_AUDIO } = SOUNDS
 //hook，事件总线引入
 import { eventBus } from "@/hook/eventBus";
 //游戏逻辑函数引入
-import { initMap } from "@/hook/localGameLogic";
+import { initMap } from "@/gameLogic/local/localGameLogic";
 //外部类引入
 import { Num } from "./num"
 //socket类引入
@@ -19,7 +19,7 @@ export const Stage = function (gameInstance) {
 	this.ctx = gameInstance.ctx;
 	this.ctx.fillStyle = "#7f7f7f";
 	this.drawHeigth = 15;
-	this.level = gameInstance.level;
+	this.level = 1;
 	this.temp = 0;
 	this.dir = 1; //中间切换的方向，1：合上，2：展开
 	this.isReady = false;//标识地图是否已经画好

@@ -1,5 +1,5 @@
 import { eventBus } from "@/hook/eventBus";
-import { socketMsgHandler } from "@/hook/socketGameLogic"
+import { socketMsgHandler } from "@/gameLogic/online/socketMessageHandler"
 import { setTimeout } from "core-js";
 export class MyWebSocket extends WebSocket {
     constructor(url, gameInstance, protocols) {

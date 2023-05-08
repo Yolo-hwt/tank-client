@@ -29,11 +29,6 @@ export const Bullet = function (owner, type, dir, gameInstance) {
 	this.drawByServerOpera = function () {
 		this.ctx.drawImage(RESOURCE_IMAGE, POS["bullet"][0] + this.dir * this.size, POS["bullet"][1], this.size, this.size, this.x, this.y, this.size, this.size);
 	}
-	//服务器控制
-	this.drawByServerData = function (dir, x, y) {
-		this.ctx.drawImage(RESOURCE_IMAGE, POS["bullet"][0] + dir * this.size, POS["bullet"][1], this.size, this.size, x, y, this.size, this.size);
-	}
-
 	this.move = function () {
 		if (this.dir == UP) {
 			this.y -= this.speed;

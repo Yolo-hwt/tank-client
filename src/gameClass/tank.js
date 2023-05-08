@@ -1,6 +1,5 @@
 //全局变量引入
-import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE, GAME_MODE } from "@/hook/globalParams";
-const { ONLINE_GAME } = GAME_MODE
+import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE } from "@/hook/globalParams";
 const { UP, DOWN, LEFT, RIGHT } = DIRECT;
 const { RESOURCE_IMAGE } = PICTURES();
 const { PLAYER_DESTROY_AUDIO, ATTACK_AUDIO, TANK_DESTROY_AUDIO } = SOUNDS
@@ -174,16 +173,6 @@ export const Tank = function (gameInstance) {
 		this.gameCtx.crackArray.push(new CrackAnimation(CRACK_TYPE_TANK, this.ctx, this));
 		TANK_DESTROY_AUDIO.play();
 	};
-	//绘制出现前的图片
-	this.drawAppearBefore = function (temp, x, y) {
-		this.ctx.drawImage(RESOURCE_IMAGE, POS["enemyBefore"][0] + temp * 32, POS["enemyBefore"][1], 32, 32, x, y, 32, 32);
-	}
-	//绘制出现后
-	this.drawAppearAfter = function (x, y, dir, tankType) {
-		this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy" + tankType][0] + dir * this.size, POS["enemy" + tankType][1], 32, 32, x, y, 32, 32);
-	}
-
-
 };
 
 /**

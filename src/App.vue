@@ -28,17 +28,17 @@ import {
   localkeydownEventHandler,
   localKeyupEventHandler,
   localGameLoop,
-} from "@/hook/localGameLogic";
+} from "@/gameLogic/local/localGameLogic";
 //在线游戏逻辑方法引入
 import {
   connectWebSocket,
   reconnectWebSocket,
   onlineKeyEventHandler,
-  onlineGameLoop,
-} from "@/hook/socketGameLogic";
+} from "@/gameLogic/online/socketGameLogic";
+import{onlineGameLoop}from "@/gameLogic/online/onlineGameLoop"
 
 //hook，事件总线引入
-import { eventBus } from "./hook/eventBus";
+import { eventBus } from "@/hook/eventBus";
 //socket参数引入
 import { KEY_EVENT_TYPE } from "./socket/socketMessage";
 const { KEY_EVENT_DOWN, KEY_EVENT_UP } = KEY_EVENT_TYPE;
