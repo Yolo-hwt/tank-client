@@ -148,7 +148,8 @@ export const addCrackByServerData = function (gameInstance, refers) {
     let item = {};
     if (crackType == CRACK_TYPE.CRACK_TYPE_BULLET) {
         const { bulletIndex } = refers;
-        item == gameInstance.bulletArray[bulletIndex];
+        item = gameInstance.bulletArray[bulletIndex];
+        // console.log(item);
     } else if (crackType == CRACK_TYPE.CRACK_TYPE_TANK) {
         const { tankType, tankIndex } = refers;
         if (tankType == 2) {//ai坦克

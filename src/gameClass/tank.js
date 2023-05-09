@@ -475,7 +475,8 @@ export const EnemyThree = function (gameInstance) {
 				eventBus.emit('sendtoserver', content)
 			}
 		} else {
-			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy3"][0] + this.dir * this.size, POS["enemy3"][1], 32, 32, this.x, this.y, 32, 32);
+			// this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy3"][0] + this.dir * this.size + (3 - this.lives) * this.size * 4, POS["enemy3"][1], 32, 32, this.x, this.y, 32, 32);
+			this.ctx.drawImage(RESOURCE_IMAGE, POS["enemy3"][0] + this.dir * this.size + (3 - this.lives) * this.size * 4, POS["enemy3"][1], 32, 32, this.x, this.y, 32, 32);
 		}
 	}
 

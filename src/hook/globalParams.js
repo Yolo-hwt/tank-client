@@ -3,7 +3,9 @@ import { Keyboard } from "@/gameClass/keyboard";
 /***************游戏模式 */
 export const GAME_MODE = {
     LOCAL_GAME: 'local_game',
-    ONLINE_GAME: 'online_game'
+    ONLINE_GAME: 'online_game',
+    ADVENTURE_GAME: 'adventure_game',
+    MULTIPLAER_GAME: "multiplayer_game",
 }
 /*****************键盘类******************* */
 const getKeyBoard = () => {

@@ -144,10 +144,11 @@ const operaSyncHandler = function (obj, gameInstance) {
             break
         }
         case SYNC_SERVER_TYPE.AITANK_MOVE: {
-            const { index, dir, x, y } = refers;
+            const { index, dir, x, y, lives } = refers;
             gameInstance.enemyArray[index].x = x;
             gameInstance.enemyArray[index].y = y;
             gameInstance.enemyArray[index].dir = dir;
+            gameInstance.enemyArray[index].lives = lives;
             break;
         }
         case SYNC_SERVER_TYPE.PLAYER_RENASCENC: {
