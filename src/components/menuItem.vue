@@ -10,8 +10,8 @@
     <script>
       //hook，事件总线引入
     import { eventBus } from "@/hook/eventBus";
-    import { ref } from 'vue';
-    export default {
+    import {ref} from 'vue';
+     export default {
         name: "menuItem",
         props:["menuItemInfo"],
             
@@ -20,7 +20,7 @@
               const { type,index,title:gameTitle, height:gameHeight,width: gameWidth } = gameMenuItemInfo.value;
               function clickToRoutePage(type) {
                 //发送消息到app页面通知跳转
-                    eventBus.emit("routeToPage", type);
+                  eventBus.emit("routeToPage", type);
               }
               return {
                     index,

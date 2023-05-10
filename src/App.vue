@@ -26,16 +26,17 @@ export default {
       if (type != undefined || type != null) {
         switch (type) {
           case GAME_MODE.LOCAL_GAME: {//单机模式
-            console.log(type);
-            router.push({name:"localgame"})
+            // console.log(type);
+            router.push({ name: "localgame" });
             break;
           }
           case GAME_MODE.ADVENTURE_GAME: {//双人冒险
-            console.log(type);
+            // console.log(type);
+            router.push({ name: "match" });
             break;
           }
           case GAME_MODE.MULTIPLAER_GAME: {//多人对战
-            console.log(type);
+            // console.log(type);
             break;
           }
 
