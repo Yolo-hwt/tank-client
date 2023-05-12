@@ -11,21 +11,21 @@ const router = createRouter({
     routes: [
         {
             name: 'menu',
-            path: '/menu',
+            path: '/menupage',
             component: menuView,
             meta: { title: '菜单' },
 
         },
         {
             name: 'match',
-            path: '/match',
+            path: '/matchpage',
             component: matchView,
             meta: { title: '匹配' },
 
         },
         {
             name: 'localgame',
-            path: '/localgame',
+            path: '/localgamepage',
             component: localGame,
             meta: { title: '本地游戏' },
 
