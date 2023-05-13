@@ -1,5 +1,5 @@
 //全局参数引入
-import { SOUNDS } from "@/hook/globalParams";
+import { GAME_MODE, SOUNDS } from "@/hook/globalParams";
 //类引入
 import { Prop } from "@/gameClass/prop";
 //socketMessage参数引入
@@ -7,7 +7,8 @@ import {
     MSG_TYPE_SERVER,
     SYNC_SERVER_TYPE,
     OPERA_AUDIO_TYPE,
-    OPERA_CLEAR_TYPE
+    OPERA_CLEAR_TYPE,
+    MULTI_SIGN_TYPE
 } from "@/socket/socketMessage";
 //线上gameLogic方法引入
 import {
@@ -19,10 +20,11 @@ import {
     addCrackByServerData,
     skipLevelByServerData
 } from "./socketGameLogic"
-
+//事件总线引入
+import { eventBus } from "@/hook/eventBus";
 
 /****************接收服务器端操作类消息******************** */
-export const socketMsgHandler = function (msg, gameInstance) {
+export const socketMsgHandler = function (ws, msg, gameInstance) {
     const data = msg.data;
     const type = msg.type;
     switch (type) {
@@ -40,6 +42,10 @@ export const socketMsgHandler = function (msg, gameInstance) {
         }
         case MSG_TYPE_SERVER.MSG_OPERA_CLEAR: {//清除画布
             operaClearHandler(data, gameInstance)
+            break;
+        }
+        case MSG_TYPE_SERVER.MSG_MULTI_SIGN: {//多人游戏指令
+            operaMultiHandler(ws, data)
             break;
         }
         default:
@@ -204,4 +210,49 @@ const operaAudioHandler = function (obj) {
         default:
             break;
     }
+}
+//多人游戏
+const operaMultiHandler = function (ws, obj) {
+    // console.log(obj);
+    const { multiType, signType } = obj;
+    const refers = obj?.refers;
+    // console.log(refers);
+    switch (multiType) {
+        case GAME_MODE.ADVENTURE_GAME: {
+            adventureGameHandler(ws, signType, refers);
+            break;
+        }
+        case GAME_MODE.MULTIPLAER_GAME: {
+            multiGameHandler(ws, signType);
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+const adventureGameHandler = function (ws, signType, refers) {
+    //匹配到的对方的id
+    const partner = refers?.partner;
+    switch (signType) {
+        case MULTI_SIGN_TYPE.ADVENTURE_MATCH_OK: {
+            console.log("匹配成功！");
+            if (partner) {
+                let dataobj = { index: 1, name: partner, state: true, match: true };
+                // console.log(dataobj);
+                eventBus.emit("matchViewUpdatePlayers", dataobj)
+            }
+            break;
+        }
+        case MULTI_SIGN_TYPE.ADVENTURE_MATCH_NO: {
+            ws.close();
+            console.log("匹配失败！");
+            break;
+        }
+        default:
+            break;
+    }
+}
+const multiGameHandler = function (ws, signType) {
+
 }

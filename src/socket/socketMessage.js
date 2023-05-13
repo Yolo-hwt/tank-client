@@ -25,7 +25,8 @@ export const MSG_TYPE_SERVER = {
     MSG_OPERA_DRAW: "opera_draw",
     MSG_SYNC_SERVER: "sync_server_data",    //同步服务器端数据
     MSG_OPERA_AUDIO: "opera_audio",
-    MSG_OPERA_CLEAR: "opera_clear"
+    MSG_OPERA_CLEAR: "opera_clear",
+    MSG_MULTI_SIGN: "multi_sign",//多人游戏标识
 }
 export const OPERA_CLEAR_TYPE = {
     TANKCTX_CLEAR: 'tanctx_clear',
@@ -68,6 +69,11 @@ export const OPERA_AUDIO_TYPE = {
     AUDIO_BULLET_DESTORY: 'audio_bulletdestory',
     AUDIO_PROP: "audio_prop"
 }
+//多人游戏标识类型
+export const MULTI_SIGN_TYPE = {
+    ADVENTURE_MATCH_OK: "adventure_match_ok",
+    ADVENTURE_MATCH_NO: "adventure_match_no",
+}
 /*************消息实体**************************************/
 //与设备交互的消息主体，通用类
 export const SocketMessage = function (from = "", name = "", type = "", data = {}) {
@@ -91,6 +97,12 @@ export const SyncMsg = function (msg, syncType, refers = {}) {
     NormalMsg.call(this, msg);
     this.syncType = syncType;
     this.refers = refers;
+}
+//多人游戏标识
+export const MultiMsg = function (msg, multiType, signType) {
+    NormalMsg.call(this, msg);
+    this.multiType = multiType;
+    this.signType = signType;
 }
 //键盘事件
 //refers为附带到服务器的参考数据，提供游戏逻辑判断用

@@ -26,17 +26,34 @@
 <script>
 import headPortrait from "@/components/headPortrait.vue";
 import passWordItem from "@/components/passWordItem.vue";
-import { computed, reactive, watch, ref, onMounted } from "vue";
-import { useRouter } from 'vue-router';
-
+import { computed, reactive, watch, ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter, useRoute } from 'vue-router';
+//事件总线
+import { eventBus } from '@/hook/eventBus';
+//instance
+import { generateGameInstance } from "@/hook/instance"
+//全局参数
+import { host, port } from "@/hook/globalParams"
+//socketGameLogic
+import {
+  connectWebSocket,
+} from "@/gameLogic/online/socketGameLogic";
 export default {
   components: { headPortrait, passWordItem },
   name: "matchView",
   setup() {
     let router = useRouter();
+    let route = useRoute();
+    let routeQuery = {};
+    let wsUrlTemp = "";
+    let wsClientTemp = {};
+    let matchStatus = ref(false);
+    //按钮dom
     let confirmBtn = null;
     let cancelBtn = null;
-    //故定数据
+    //按钮控制
+    let btnIsDisabled = reactive({ confirm: true, cancel: true });
+    //固定数据
     const headWidth = "80px";
     const headHeight = "80px";
     const psdWidth = "100px";
@@ -46,7 +63,7 @@ export default {
       {
         index: 0,
         name: "player1",
-        isReady: false
+        isReady: true
       },
       {
         index: 1,
@@ -74,25 +91,28 @@ export default {
     //tips
     let matchTimes = ref(15);
     let matchTimer = null;
-    const tipColors = reactive({ safe: "#7bed9f", wait: "#eccc68" });
-    const matchTips = reactive({
+    const tipColors = { safe: "#7bed9f", wait: "#eccc68" }
+    const matchTips = {
       init: "输入房间号，确认匹配，等待游戏开始",
       wait: "匹配中，请稍后..." + matchTimes.value + "s",
-    });
+      success: "匹配成功！即将进入游戏......",
+    }
+    //当前的提示信息原型
     let curTipInstance = reactive({ color: tipColors.safe, info: matchTips.init });
-    //按钮控制
-    let btnIsDisabled = reactive({ confirm: true, cancel: true });
-    //computed
+
+    //////////////////////computed
+    //就绪状态玩家
     let isReadyPlayers = computed(() => {
       return players.filter((item) => {
         if (item.isReady) {
           return true;
         } else {
-          // return false;
-          return true;
+          return false;
+          // return true;
         }
       })
     });
+    //房间号
     let matchCodes = computed(() => {
       let codes = "";
       for (let i = 0; i < psdInstances.length; i++) {
@@ -101,6 +121,19 @@ export default {
       return codes;
     });
     //watch
+    watch(matchStatus, (newValue) => {
+      if (newValue == true) {
+        //按钮
+        btnIsDisabled.confirm = true;
+        btnIsDisabled.cancel = true;
+        //timer
+        clearInterval(matchTimer);
+        //
+        tipsSuccess()
+      }
+    })
+    ///////////////////////watch
+    //密码框自动跳转下一个
     const psdValueWatcherCallBack = (newValue, oldValue) => {
       // console.log("watch");
       if (matchCodes.value.includes("-1")) {
@@ -125,12 +158,35 @@ export default {
         // btnComfirmWatcher();//取消监测
       }
     })
-    //function
+
+    //////////////////////function
+    //初始化数据
+    function initData() {
+      routeQuery = Object.assign({}, route.query);
+      const { name, mode } = routeQuery;
+      players[0].name = name;
+      wsUrlTemp = `ws://${host}:${port}/ws/?name=${name}&mode=${mode}`;
+      confirmBtn = document.getElementById("matchComfirmBtn");
+      cancelBtn = document.getElementById("matchCancelBtn");
+    }
+    //返回菜单主页
     function clickBackToHome() {
       //清空计时器
       clearInterval(matchTimer);
       //返回菜单界面
       router.push({ name: 'menu' })
+    }
+    //事件总线挂载
+    function eventsOn() {
+      eventBus.on("matchViewUpdatePlayers", (dataobj) => {
+        const { index, name, state, match } = dataobj;
+        players[index].name = name;
+        players[index].isReady = state;
+        matchStatus.value = match;
+      });
+    }
+    function eventsOff() {
+      eventBus.off("matchViewUpdatePlayers");
     }
     //tips方法
     function tipsInit() {
@@ -141,12 +197,24 @@ export default {
       curTipInstance.info = matchTips.wait;
       curTipInstance.color = tipColors.wait;
     }
+    function tipsSuccess() {
+      curTipInstance.info = matchTips.success;
+      curTipInstance.color = tipColors.safe;
+    }
     //双人游戏请求服务器连接
     function adventureGameRequest() {
-
+      // eventBus.emit("sendAppWsClient", "matchView");
+      // wsClientTemp.ok = 222;
+      // console.log(wsClientTemp);
+      let gameInstance = generateGameInstance();
+      gameInstance.clientName = routeQuery.name;
+      wsClientTemp = connectWebSocket(wsClientTemp, wsUrlTemp, gameInstance);
+      eventBus.emit("updateAppWsClient", wsClientTemp);
     }
     //确认匹配
     function btnConfirmClick() {
+      //更新url
+      wsUrlTemp += "&code=" + matchCodes.value;
       //按钮
       btnIsDisabled.confirm = true;
       btnIsDisabled.cancel = false;
@@ -155,6 +223,7 @@ export default {
       //更新提示信息
       tipsWait();
       //计时匹配
+      adventureGameRequest();
       matchTimer = setInterval(() => {
         if (matchTimes.value == 0) {
           matchTimes.value = 15;
@@ -165,9 +234,9 @@ export default {
         curTipInstance.info = "匹配中，请稍后..." + matchTimes.value + "s";
       }, 1000);
     }
-
-    //取消按钮
+    //取消匹配按钮
     function btnCancelClick() {
+      wsClientTemp.close();
       //清空密码框
       psdInstances.forEach((element, index) => {
         if (index == 0) {
@@ -180,24 +249,21 @@ export default {
       // console.log(psdInstances);
       //重新监视密码框
       psdValueWatcher = watch(psdInstances, psdValueWatcherCallBack);
-      //
-      // for(let i=0;i<inputDoms.length;i++){
-      //   inputDoms[i].value='';
-      // }
       //清除计时器
       clearInterval(matchTimer);
-
       //按钮
       btnIsDisabled.confirm = true;
       confirmBtn.textContent = "确认匹配";
       btnIsDisabled.cancel = true;
-
+      //重置tips
       tipsInit();
-
     }
     onMounted(() => {
-      confirmBtn = document.getElementById("matchComfirmBtn");
-      cancelBtn = document.getElementById("matchCancelBtn");
+      initData();
+      eventsOn();
+    })
+    onBeforeUnmount(() => {
+      eventsOff();
     });
     return {
       isReadyPlayers,
@@ -208,14 +274,11 @@ export default {
       psdHeight,
       clickBackToHome,
       matchCodes,
-      matchTips,
-      tipColors,
       curTipInstance,
       btnIsDisabled,
       btnConfirmClick,
       btnCancelClick,
-      confirmBtn,
-      cancelBtn
+      wsClientTemp
     };
   },
 };
@@ -256,7 +319,7 @@ export default {
 .match-head-container {
   flex: 2;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: flex-start;
 }
 

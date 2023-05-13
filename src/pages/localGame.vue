@@ -16,9 +16,10 @@ import { onMounted, onBeforeUnmount, reactive } from "vue";
 import { useRoute } from 'vue-router';
 //全局参数引入
 import { STATE, KEYBOARD, GAME_MODE } from "@/hook/globalParams";
-const { GAME_STATE_MENU, GAME_STATE_WAIT } = STATE;
+const { GAME_STATE_WAIT } = STATE;
 const { LOCAL_GAME, ONLINE_GAME } = GAME_MODE;
-//类引入
+//instance
+import { generateGameInstance } from "@/hook/instance"
 
 //本地游戏逻辑方法引入
 import {
@@ -50,54 +51,24 @@ export default {
       name: "test",
       host: "127.0.0.1",
       port: "1024",
-      wsUrl: "",
+      wsUrl: "ws://127.0.0.1:1024/ws/?name=test",
       wsSocket: {}
     })
     //游戏全局对象
-    const gameInstance = reactive({
-      //客户端名称
-      clientName: "test",
-      //游戏模式
-      gameMode: LOCAL_GAME,
-      //本地游戏循环计时器id
-      localGameLoopId: null,
-      onlineGameLoopId: null,
-      ctx: {}, //2d画布
-      wallCtx: {}, //地图画布
-      grassCtx: {}, //草地画布
-      tankCtx: {}, //坦克画布
-      overCtx: {}, //结束画布
-      menu: null, //菜单
-      stage: null, //舞台
-      map: null, //地图
-      player1: null, //玩家1
-      player2: null, //玩家2
-      prop: null,
-      enemyArray: [], //敌方坦克
-      bulletArray: [], //子弹数组
-      keys: [], //记录按下的按键
-      crackArray: [], //爆炸数组
-      gameState: GAME_STATE_MENU, //默认菜单状态
-      level: 1, //默认关卡等级
-      maxEnemy: 20, //敌方坦克总数
-      maxAppearEnemy: 5, //屏幕上一起出现的最大数
-      appearEnemy: 0, //已出现的敌方坦克
-      mainframe: 0,
-      isGameOver: false, //游戏结束标识
-      overX: 176,
-      overY: 384,
-      emenyStopTime: 0, //敌方坦克停止时间
-      homeProtectedTime: -1,
-      propTime: 300,
-    });
+    const gameInstance = reactive(generateGameInstance());
     //初始化游戏参数，返回游戏连接地址
-    function initGameData(name, mode, host, port) {
-      client.name = name;
+    function initGame(routeQuery) {
+      const { mode } = routeQuery;
       gameInstance.gameMode = mode;
+      if (mode == GAME_MODE.LOCAL_GAME) {
+        return;
+      }
+      const { name, host, port } = routeQuery;
+      client.name = name;
       gameInstance.clientName = name;
       client.host = host;
       client.port = port;
-      client.wsUrl = `ws://${host}:${port}/ws/?name=${name}&mode=${mode}`
+      client.wsUrl = `ws://${host}:${port}/ws/?name=${name}&mode=${mode}`;
     }
     //事件监听
     function eventsOn() {
@@ -122,27 +93,34 @@ export default {
     }
     //键盘事件监听器
     //根据gameMode参数来动态判断本地或线上游戏
+    const keyDownHandler = (e, gameInstance, KEYBOARD) => {
+      if (gameInstance.gameMode == ONLINE_GAME) {
+        //联网游戏模式
+        onlineKeyEventHandler(e, KEY_EVENT_DOWN, client.name);
+      } else if (gameInstance.gameMode == LOCAL_GAME) {
+        //单机游戏模式
+        localkeydownEventHandler(e, gameInstance, KEYBOARD);
+      }
+    }
+    const keyUpHandler = (e, gameInstance) => {
+      if (gameInstance.gameMode == ONLINE_GAME) {
+        //联网游戏模式
+        onlineKeyEventHandler(e, KEY_EVENT_UP, client.name);
+      } else if (gameInstance.gameMode == LOCAL_GAME) {
+        //单机游戏模式
+        localKeyupEventHandler(e, gameInstance);
+      }
+    }
     function keyEventListener(gameInstance, KEYBOARD) {
       //键盘按下事件
-      document.addEventListener("keydown", (e) => {
-        if (gameInstance.gameMode == ONLINE_GAME) {
-          //联网游戏模式
-          onlineKeyEventHandler(e, KEY_EVENT_DOWN, client.name);
-        } else if (gameInstance.gameMode == LOCAL_GAME) {
-          //单机游戏模式
-          localkeydownEventHandler(e, gameInstance, KEYBOARD);
-        }
-      });
+      document.addEventListener("keydown", (e) => keyDownHandler(e, gameInstance, KEYBOARD));
       //键盘回上事件
-      document.addEventListener("keyup", (e) => {
-        if (gameInstance.gameMode == ONLINE_GAME) {
-          //联网游戏模式
-          onlineKeyEventHandler(e, KEY_EVENT_UP, client.name);
-        } else if (gameInstance.gameMode == LOCAL_GAME) {
-          //单机游戏模式
-          localKeyupEventHandler(e, gameInstance);
-        }
-      });
+      document.addEventListener("keyup", (e) => keyUpHandler(e, gameInstance));
+    }
+    //移除事件监听
+    function removeKeyEventListener() {
+      document.removeEventListener("keydown", keyDownHandler);
+      document.removeEventListener("keyup", keyUpHandler);
     }
     //清除游戏循环
     function clearGameLoop() {
@@ -178,9 +156,9 @@ export default {
     }
 
     onMounted(() => {
-      const routeQuery = route.query;
-      const { name, mode, host, port } = routeQuery;
-      initGameData(name, mode, host, port);
+      //初始化游戏参数
+      initGame(route.query);
+      //事件总线挂载
       eventsOn();
       //初始化视窗
       initScreen(gameInstance);
@@ -195,6 +173,7 @@ export default {
     onBeforeUnmount(() => {
       clearInterval(gameInstance.localGameLoopId);
       eventsOff();
+      removeKeyEventListener();
     });
     /* 
     watch多个数据: 

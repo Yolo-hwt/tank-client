@@ -39,9 +39,16 @@ export default {
       { index: 2, type: GAME_MODE.MULTIPLAER_GAME, title: "多人对战", width: "160px", height: "60px" }
     ];
 
+    //提交游戏名
     function submitUserName() {
       if (menuUserName.value == "") {
         alert("游戏id不能为空喔！");
+        return;
+      }
+      if (menuUserName.value.length > 10) {
+        alert("id最大限制10字符！");
+        //清空文本框
+        menuUserName.value = "";
         return;
       }
       eventBus.emit("updateUserName", menuUserName.value);
@@ -50,10 +57,12 @@ export default {
       menuUserName.value = "";
       alert("hello!" + userNameTemp.value + "开始游戏吧");
     }
+    //获取随机id
     function getRandomName() {
       const name = generateRandomGameName();
       menuUserName.value = name;
     }
+    //事件总线
     function eventsOn() {
       eventBus.on("menuViewGetUserName", (name) => {
         userNameTemp.value = name;
@@ -62,6 +71,7 @@ export default {
     function eventsOff() {
       eventBus.off("menuViewGetUserName")
     }
+    //mounted
     onMounted(() => {
       eventsOn();
       //通知app下发username

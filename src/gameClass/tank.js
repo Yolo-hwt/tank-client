@@ -200,7 +200,7 @@ export const PlayTank = function (gameInstance) {
 	this.isProtected = true;//是否受保护
 	this.protectedTime = 500;//保护时间
 	this.offsetX = 0;//坦克2与坦克1的距离
-	this.speed = 2;//坦克的速度
+	this.speed = 3;//坦克的速度
 	this.gameCtx = gameInstance;
 	//坦克绘制方法
 	//根据服务器发送的数据来绘制

@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref, reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
 // hook，事件总线引入
 import { eventBus } from "@/hook/eventBus";
@@ -15,15 +15,17 @@ export default {
   setup() {
     let router = useRouter();
     let userName = ref("xxx");
-    const host = "127.0.0.1";
-    const port = "1024";
+    let wsClientInstance = reactive({ test: 111 });
     function appEventsOn() {
+      //页面跳转
       eventBus.on("routeToPage", (type) => {
         menuItemClickHandler(type);
       });
+      //更新用户名
       eventBus.on("updateUserName", (name) => {
         userName.value = name;
       })
+      //发送当前用户名
       eventBus.on("sendAppName", (target) => {
         switch (target) {
           case "menuView": {
@@ -35,14 +37,34 @@ export default {
         }
       })
 
+      //获取client连接
+      eventBus.on("sendAppWsClient", (target) => {
+        switch (target) {
+          case "matchView": {
+            // console.log('send match');
+            eventBus.emit("matchViewGetWsClient", wsClientInstance)
+            break;
+          }
+          case "adventure": {
+            eventBus.emit("adventureViewGetWsClient", wsClientInstance)
+            break;
+          }
+          default:
+            break;
+        }
+      })
+      //更新wsClient
+      eventBus.on("updateAppWsClient", (ws) => wsClientInstance = ws)
     }
     function appEventsOff() {
       eventBus.off("routeToPage");
       eventBus.off("updateUserName");
       eventBus.off("sendAppName");
+      eventBus.off("updateAppWsClient");
     }
+    //菜单点击跳转
     function menuItemClickHandler(type) {
-      if (userName.value == undefined || userName.value == "") {
+      if (userName.value == undefined || userName.value == "" || userName.value == "xxx") {
         alert("先给自己起个名吧！");
         return;
       }
@@ -50,7 +72,7 @@ export default {
         switch (type) {
           case GAME_MODE.LOCAL_GAME: {//单机模式
             // console.log(type);
-            const content = { name: userName.value, mode: GAME_MODE.LOCAL_GAME, host, port };
+            const content = { mode: GAME_MODE.LOCAL_GAME };
             router.push({
               name: "localgame",
               path: "localgamepage",
@@ -60,7 +82,12 @@ export default {
           }
           case GAME_MODE.ADVENTURE_GAME: {//双人冒险
             // console.log(type);
-            router.push({ name: "match" });
+            const content = { name: userName.value, mode: GAME_MODE.ADVENTURE_GAME };
+            router.push({
+              name: "match",
+              path: "matchpage",
+              query: content
+            });
             break;
           }
           case GAME_MODE.MULTIPLAER_GAME: {//多人对战
@@ -82,7 +109,8 @@ export default {
     })
     return {
       menuItemClickHandler,
-      userName
+      userName,
+      wsClientInstance
     };
   },
 };

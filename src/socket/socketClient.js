@@ -35,10 +35,11 @@ export class MyWebSocket extends WebSocket {
         //即等待上一条消息执行之后，再执行它
         let data = this.getMsg(e)
         setTimeout(() => {
-            if (data.text) {
+            if (data.test) {
                 console.log('get msg from server:', data);
+            } else {
+                socketMsgHandler(this, data, this.gameInstance);
             }
-            socketMsgHandler(data, this.gameInstance)
         }, 0);
     }
 
