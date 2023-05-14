@@ -3,7 +3,8 @@ export const MSG_TYPE_CLIENT = {
     MSG_NORMAL: 'normal',   //普通消息
     MSG_SYNC: 'syncdata',   //同步客户端数据到服务器
     MSG_BEAT: 'heartbeat',  //心跳包
-    MSG_KEY: 'keyevent'     //键盘事件
+    MSG_KEY: 'keyevent',     //键盘事件
+    MSG_MULTI: 'multiplayer',//多人游戏事件
 }
 //keyEvent键盘事件类型，按下或回上
 export const KEY_EVENT_TYPE = {
@@ -19,7 +20,11 @@ export const SYNC_CLIENT_TYPE = {
     OVERANIMATE_ISOK: "over_animation_is_ok",
     ENEMY_ISAPPEAR: "enemy_isappear",
 }
-
+//多人游戏标识
+export const MULTI_CLIENT_TYPE = {
+    ADVENTURE_CLIENT_READY: "adventure_client_ok",
+    ADVENTURE_CLIENT_STAGEISREADY: "adventure_client_stage_ok",
+}
 /************服务器消息类型*************************/
 export const MSG_TYPE_SERVER = {
     MSG_OPERA_DRAW: "opera_draw",
@@ -70,7 +75,7 @@ export const OPERA_AUDIO_TYPE = {
     AUDIO_PROP: "audio_prop"
 }
 //多人游戏标识类型
-export const MULTI_SIGN_TYPE = {
+export const MULTI_SERVER_TYPE = {
     ADVENTURE_MATCH_OK: "adventure_match_ok",
     ADVENTURE_MATCH_NO: "adventure_match_no",
 }

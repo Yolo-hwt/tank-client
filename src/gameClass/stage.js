@@ -1,6 +1,6 @@
 //全局变量引入
 import { POS, PICTURES, SOUNDS, GAME_MODE } from "../hook/globalParams";
-const { ONLINE_GAME } = GAME_MODE
+const { ONLINE_GAME, ADVENTURE_GAME } = GAME_MODE
 const { RESOURCE_IMAGE } = PICTURES();
 const { START_AUDIO } = SOUNDS
 //hook，事件总线引入
@@ -10,7 +10,10 @@ import { initMap } from "@/gameLogic/local/localGameLogic";
 //外部类引入
 import { Num } from "./num"
 //socket类引入
-import { SyncMsg, SocketMessage, MSG_TYPE_CLIENT, SYNC_CLIENT_TYPE } from "@/socket/socketMessage"
+import {
+	SyncMsg, SocketMessage, MultiMsg,
+	MSG_TYPE_CLIENT, SYNC_CLIENT_TYPE, MULTI_CLIENT_TYPE
+} from "@/socket/socketMessage"
 const { MSG_SYNC } = MSG_TYPE_CLIENT;
 const { STAGE_ISREADY } = SYNC_CLIENT_TYPE
 
@@ -77,6 +80,17 @@ export const Stage = function (gameInstance) {
 						this.gameInstance.clientName,
 						MSG_SYNC,
 						new SyncMsg("sync_stage_isready", STAGE_ISREADY, { isReady: this.isReady })
+					);
+					//发送到服务器
+					eventBus.emit('sendtoserver', content)
+				}
+				if (this.gameInstance.gameMode == ADVENTURE_GAME) {
+					// console.log("adventure stage ok");
+					const content = new SocketMessage(
+						"client",
+						this.gameInstance.clientName,
+						MSG_TYPE_CLIENT.MSG_MULTI,
+						new MultiMsg("adventure_stage_ok", GAME_MODE.ADVENTURE_GAME, MULTI_CLIENT_TYPE.ADVENTURE_CLIENT_STAGEISREADY)
 					);
 					//发送到服务器
 					eventBus.emit('sendtoserver', content)

@@ -75,7 +75,7 @@ export default {
             const content = { mode: GAME_MODE.LOCAL_GAME };
             router.push({
               name: "localgame",
-              path: "localgamepage",
+              path: "/localgamepage",
               query: content
             });
             break;
@@ -85,7 +85,7 @@ export default {
             const content = { name: userName.value, mode: GAME_MODE.ADVENTURE_GAME };
             router.push({
               name: "match",
-              path: "matchpage",
+              path: "/matchpage",
               query: content
             });
             break;

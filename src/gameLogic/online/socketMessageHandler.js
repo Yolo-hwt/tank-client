@@ -8,7 +8,7 @@ import {
     SYNC_SERVER_TYPE,
     OPERA_AUDIO_TYPE,
     OPERA_CLEAR_TYPE,
-    MULTI_SIGN_TYPE
+    MULTI_SERVER_TYPE
 } from "@/socket/socketMessage";
 //线上gameLogic方法引入
 import {
@@ -144,6 +144,7 @@ const operaSyncHandler = function (obj, gameInstance) {
         case SYNC_SERVER_TYPE.BULLET_MOVE: {
             const { bulletIndex, x, y } = refers
             if (bulletIndex != undefined || bulletIndex != null) {
+                // console.log(bulletIndex, gameInstance.bulletArray);
                 gameInstance.bulletArray[bulletIndex].x = x;
                 gameInstance.bulletArray[bulletIndex].y = y;
             }
@@ -235,7 +236,7 @@ const adventureGameHandler = function (ws, signType, refers) {
     //匹配到的对方的id
     const partner = refers?.partner;
     switch (signType) {
-        case MULTI_SIGN_TYPE.ADVENTURE_MATCH_OK: {
+        case MULTI_SERVER_TYPE.ADVENTURE_MATCH_OK: {
             console.log("匹配成功！");
             if (partner) {
                 let dataobj = { index: 1, name: partner, state: true, match: true };
@@ -244,7 +245,7 @@ const adventureGameHandler = function (ws, signType, refers) {
             }
             break;
         }
-        case MULTI_SIGN_TYPE.ADVENTURE_MATCH_NO: {
+        case MULTI_SERVER_TYPE.ADVENTURE_MATCH_NO: {
             ws.close();
             console.log("匹配失败！");
             break;

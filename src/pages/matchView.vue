@@ -33,7 +33,7 @@ import { eventBus } from '@/hook/eventBus';
 //instance
 import { generateGameInstance } from "@/hook/instance"
 //全局参数
-import { host, port } from "@/hook/globalParams"
+import { host, port, STATE, GAME_MODE } from "@/hook/globalParams"
 //socketGameLogic
 import {
   connectWebSocket,
@@ -100,7 +100,9 @@ export default {
     //当前的提示信息原型
     let curTipInstance = reactive({ color: tipColors.safe, info: matchTips.init });
 
-    //////////////////////computed
+    /**
+     * @field computed
+     */
     //就绪状态玩家
     let isReadyPlayers = computed(() => {
       return players.filter((item) => {
@@ -120,19 +122,29 @@ export default {
       }
       return codes;
     });
-    //watch
+
+    /**
+     * @field watch
+     */
+    //监视匹配状态
     watch(matchStatus, (newValue) => {
-      if (newValue == true) {
-        //按钮
+      if (newValue == true) {//匹配成功
+        //禁用按钮
         btnIsDisabled.confirm = true;
         btnIsDisabled.cancel = true;
-        //timer
+        //清除timer
         clearInterval(matchTimer);
-        //
-        tipsSuccess()
+        //提示匹配成功
+        tipsSuccess();
+        //跳转adventure游戏界面
+        router.push({
+          name: "adventuregame",
+          path: "/adventuregamepage",
+          query: { name: routeQuery.name }
+        });
       }
     })
-    ///////////////////////watch
+
     //密码框自动跳转下一个
     const psdValueWatcherCallBack = (newValue, oldValue) => {
       // console.log("watch");
@@ -159,7 +171,9 @@ export default {
       }
     })
 
-    //////////////////////function
+    /**
+      * @field function
+      */
     //初始化数据
     function initData() {
       routeQuery = Object.assign({}, route.query);
@@ -203,12 +217,14 @@ export default {
     }
     //双人游戏请求服务器连接
     function adventureGameRequest() {
-      // eventBus.emit("sendAppWsClient", "matchView");
-      // wsClientTemp.ok = 222;
-      // console.log(wsClientTemp);
       let gameInstance = generateGameInstance();
+      //初始化游戏对象，设置游戏状态为等待
       gameInstance.clientName = routeQuery.name;
+      // gameInstance.gameState = STATE.GAME_STATE_WAIT;
+      gameInstance.gameMode = GAME_MODE.ADVENTURE_GAME;
+      //连接服务器
       wsClientTemp = connectWebSocket(wsClientTemp, wsUrlTemp, gameInstance);
+      //更新app组件中的wsclient
       eventBus.emit("updateAppWsClient", wsClientTemp);
     }
     //确认匹配
@@ -223,7 +239,6 @@ export default {
       //更新提示信息
       tipsWait();
       //计时匹配
-      adventureGameRequest();
       matchTimer = setInterval(() => {
         if (matchTimes.value == 0) {
           matchTimes.value = 15;
@@ -233,6 +248,8 @@ export default {
         }
         curTipInstance.info = "匹配中，请稍后..." + matchTimes.value + "s";
       }, 1000);
+      //请求服务器匹配
+      adventureGameRequest();
     }
     //取消匹配按钮
     function btnCancelClick() {
@@ -258,6 +275,9 @@ export default {
       //重置tips
       tipsInit();
     }
+    /**
+    * @field hook
+    */
     onMounted(() => {
       initData();
       eventsOn();
