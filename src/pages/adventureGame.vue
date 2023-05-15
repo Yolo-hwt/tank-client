@@ -92,6 +92,10 @@ export default {
             clearInterval(gameInstance.onlineGameLoopId);
             gameInstance.onlineGameLoopId = null;
         }
+        //清除计时器
+        function clearTimer() {
+            clearInterval(gameInstance.onlineGameLoopId);
+        }
         function initData() {
             //获取app中的wsclient连接
             eventBus.emit("sendAppWsClient", "adventure");
@@ -147,6 +151,8 @@ export default {
         onBeforeUnmount(() => {
             eventsOff();
             removeKeyEventListener();
+            clearTimer();
+            console.log('adventure clear');
         });
         return {
             gameInstance,

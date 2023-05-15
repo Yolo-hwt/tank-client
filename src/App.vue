@@ -54,7 +54,7 @@ export default {
         }
       })
       //更新wsClient
-      eventBus.on("updateAppWsClient", (ws) => wsClientInstance = ws)
+      eventBus.on("updateAppWsClient", (ws) => { wsClientInstance = ws; console.log("app wsclient update", ws); })
     }
     function appEventsOff() {
       eventBus.off("routeToPage");

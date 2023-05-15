@@ -47,7 +47,7 @@ export default {
     let routeQuery = {};
     let wsUrlTemp = "";
     let wsClientTemp = {};
-    let matchStatus = ref(false);
+    let matchStatus = ref("");
     //按钮dom
     let confirmBtn = null;
     let cancelBtn = null;
@@ -126,22 +126,49 @@ export default {
     /**
      * @field watch
      */
+    function matchSuccess() {
+      //禁用按钮
+      btnIsDisabled.confirm = true;
+      btnIsDisabled.cancel = true;
+      //清除timer
+      clearInterval(matchTimer);
+      //提示匹配成功
+      tipsSuccess();
+      //跳转adventure游戏界面
+      router.push({
+        name: "adventuregame",
+        path: "/adventuregamepage",
+        query: { name: routeQuery.name }
+      });
+    }
+    function matchFailed() {
+      //清空密码框
+      psdInstances.forEach((element, index) => {
+        if (index == 0) {
+          psdInstances[index].fcous = true;
+        } else {
+          psdInstances[index].fcous = false;
+        }
+        psdInstances[index].value = "-1";
+      });
+      // console.log(psdInstances);
+      //重新监视密码框
+      psdValueWatcher = watch(psdInstances, psdValueWatcherCallBack);
+      //清除计时器
+      clearInterval(matchTimer);
+      //按钮
+      btnIsDisabled.confirm = false;
+      confirmBtn.textContent = "确认匹配";
+      btnIsDisabled.cancel = true;
+      //重置tips
+      tipsInit();
+    }
     //监视匹配状态
     watch(matchStatus, (newValue) => {
       if (newValue == true) {//匹配成功
-        //禁用按钮
-        btnIsDisabled.confirm = true;
-        btnIsDisabled.cancel = true;
-        //清除timer
-        clearInterval(matchTimer);
-        //提示匹配成功
-        tipsSuccess();
-        //跳转adventure游戏界面
-        router.push({
-          name: "adventuregame",
-          path: "/adventuregamepage",
-          query: { name: routeQuery.name }
-        });
+        matchSuccess();
+      } else if (newValue == false) {//匹配失败
+        matchFailed();
       }
     })
 
@@ -193,9 +220,12 @@ export default {
     //事件总线挂载
     function eventsOn() {
       eventBus.on("matchViewUpdatePlayers", (dataobj) => {
-        const { index, name, state, match } = dataobj;
-        players[index].name = name;
-        players[index].isReady = state;
+        const { match } = dataobj;
+        if (match == true) {
+          const { index, name, state } = dataobj;
+          players[index].name = name;
+          players[index].isReady = state;
+        }
         matchStatus.value = match;
       });
     }
@@ -216,21 +246,22 @@ export default {
       curTipInstance.color = tipColors.safe;
     }
     //双人游戏请求服务器连接
-    function adventureGameRequest() {
+    function adventureGameRequest(wsUrl) {
       let gameInstance = generateGameInstance();
       //初始化游戏对象，设置游戏状态为等待
       gameInstance.clientName = routeQuery.name;
       // gameInstance.gameState = STATE.GAME_STATE_WAIT;
       gameInstance.gameMode = GAME_MODE.ADVENTURE_GAME;
       //连接服务器
-      wsClientTemp = connectWebSocket(wsClientTemp, wsUrlTemp, gameInstance);
+      wsClientTemp = connectWebSocket(wsClientTemp, wsUrl, gameInstance);
       //更新app组件中的wsclient
       eventBus.emit("updateAppWsClient", wsClientTemp);
     }
     //确认匹配
     function btnConfirmClick() {
       //更新url
-      wsUrlTemp += "&code=" + matchCodes.value;
+      const wsUrl = wsUrlTemp + "&code=" + matchCodes.value;
+      console.log("url:", wsUrlTemp);
       //按钮
       btnIsDisabled.confirm = true;
       btnIsDisabled.cancel = false;
@@ -249,7 +280,7 @@ export default {
         curTipInstance.info = "匹配中，请稍后..." + matchTimes.value + "s";
       }, 1000);
       //请求服务器匹配
-      adventureGameRequest();
+      adventureGameRequest(wsUrl);
     }
     //取消匹配按钮
     function btnCancelClick() {
@@ -269,7 +300,7 @@ export default {
       //清除计时器
       clearInterval(matchTimer);
       //按钮
-      btnIsDisabled.confirm = true;
+      btnIsDisabled.confirm = false;
       confirmBtn.textContent = "确认匹配";
       btnIsDisabled.cancel = true;
       //重置tips

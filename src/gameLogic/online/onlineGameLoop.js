@@ -1,5 +1,5 @@
 //全局参数引入
-import { SCREEN, SOUNDS, POS, PICTURES, STATE } from "@/hook/globalParams";
+import { SCREEN, SOUNDS, POS, PICTURES, STATE, GAME_MODE } from "@/hook/globalParams";
 //本地gameLogic方法引入
 import { drawLives, initObject, nextLevel } from "../local/localGameLogic"
 //socketMessage参数引入
@@ -8,6 +8,8 @@ import {
     SyncMsg,
     MSG_TYPE_CLIENT,
     SYNC_CLIENT_TYPE,
+    MultiMsg,
+    MULTI_CLIENT_TYPE,
 } from "@/socket/socketMessage";
 //hook，事件总线引入
 import { eventBus } from "@/hook/eventBus";
@@ -127,6 +129,23 @@ const onlineGameOver = function (gameInstance) {
     gameInstance.overCtx.drawImage(RESOURCE_IMAGE, POS["over"][0], POS["over"][1], 64, 32, gameInstance.overX + gameInstance.map.offsetX, gameInstance.overY + gameInstance.map.offsetY, 64, 32);
     gameInstance.overY -= 2;
     if (gameInstance.overY <= parseInt(gameInstance.map.mapHeight / 2)) {
+        if (gameInstance.gameMode == GAME_MODE.ADVENTURE_GAME) {
+            //跳转匹配页面
+            //发送消息到app页面通知跳转
+            //通知服务器清除客户端相关循环
+            const content = new SocketMessage(
+                "client",
+                gameInstance.clientName,
+                MSG_TYPE_CLIENT.MSG_MULTI,
+                new MultiMsg("adventure_clear", GAME_MODE.ADVENTURE_GAME, MULTI_CLIENT_TYPE.ADVENTURE_CLIENT_CLEAR, { name: gameInstance.clientName })
+            );
+            eventBus.emit('sendtoserver', content);
+            //跳转匹配页面
+            eventBus.emit("routeToPage", GAME_MODE.ADVENTURE_GAME);
+            return;
+        }
+
+        //下面的代码是之前线上测试用的
         //通知服务器结束动画绘制完毕
         const content = new SocketMessage(
             "client",

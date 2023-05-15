@@ -248,12 +248,14 @@ const adventureGameHandler = function (ws, signType, refers) {
         case MULTI_SERVER_TYPE.ADVENTURE_MATCH_NO: {
             ws.close();
             console.log("匹配失败！");
+            eventBus.emit("matchViewUpdatePlayers", { match: false })
             break;
         }
         default:
             break;
     }
 }
+//
 const multiGameHandler = function (ws, signType) {
 
 }

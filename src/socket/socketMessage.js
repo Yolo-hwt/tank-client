@@ -24,6 +24,7 @@ export const SYNC_CLIENT_TYPE = {
 export const MULTI_CLIENT_TYPE = {
     ADVENTURE_CLIENT_READY: "adventure_client_ok",
     ADVENTURE_CLIENT_STAGEISREADY: "adventure_client_stage_ok",
+    ADVENTURE_CLIENT_CLEAR: "adventure_client_clear",
 }
 /************服务器消息类型*************************/
 export const MSG_TYPE_SERVER = {
@@ -31,7 +32,7 @@ export const MSG_TYPE_SERVER = {
     MSG_SYNC_SERVER: "sync_server_data",    //同步服务器端数据
     MSG_OPERA_AUDIO: "opera_audio",
     MSG_OPERA_CLEAR: "opera_clear",
-    MSG_MULTI_SIGN: "multi_sign",//多人游戏标识
+    MSG_MULTI_SIGN: "multi_sign",           //多人游戏标识
 }
 export const OPERA_CLEAR_TYPE = {
     TANKCTX_CLEAR: 'tanctx_clear',
@@ -104,10 +105,11 @@ export const SyncMsg = function (msg, syncType, refers = {}) {
     this.refers = refers;
 }
 //多人游戏标识
-export const MultiMsg = function (msg, multiType, signType) {
+export const MultiMsg = function (msg, multiType, signType, refers = {}) {
     NormalMsg.call(this, msg);
     this.multiType = multiType;
     this.signType = signType;
+    this.refers = refers;
 }
 //键盘事件
 //refers为附带到服务器的参考数据，提供游戏逻辑判断用
