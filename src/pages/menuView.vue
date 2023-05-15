@@ -55,7 +55,7 @@ export default {
       userNameTemp.value = menuUserName.value
       //清空文本框
       menuUserName.value = "";
-      alert("hello!" + userNameTemp.value + "开始游戏吧");
+      // alert("hello!" + userNameTemp.value + "开始游戏吧");
     }
     //获取随机id
     function getRandomName() {

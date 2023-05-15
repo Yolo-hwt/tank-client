@@ -1,5 +1,5 @@
 //全局参数引入
-import { SCREEN, DIRECT, ENEMY_LOCATION, KEYBOARD, TAGS, STATE, PICTURES, POS, SOUNDS, BULLET_TYPE } from "@/hook/globalParams";
+import { SCREEN, DIRECT, ENEMY_LOCATION, KEYBOARD, TAGS, STATE, PICTURES, POS, SOUNDS, BULLET_TYPE, GAME_MODE } from "@/hook/globalParams";
 const { SCREEN_HEIGHT, SCREEN_WIDTH } = SCREEN;
 const { UP, DOWN, LEFT, RIGHT } = DIRECT
 const { WALL } = TAGS
@@ -306,6 +306,10 @@ export const nextLevel = function (gameInstance) {
         gameInstance.level = 1;
     }
     initObject(gameInstance);
+    console.log(gameInstance.gameMode);
+    if (gameInstance.gameMode == GAME_MODE.ADVENTURE_GAME) {
+        gameInstance.menu.playNum = 2;
+    }
     //只有一个玩家
     if (gameInstance.menu.playNum == 1) {
         gameInstance.player2.lives = 0;
