@@ -1,5 +1,5 @@
 //全局变量引入
-import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE } from "@/hook/globalParams";
+import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE, MULIPLAYER_LOCATION } from "@/hook/globalParams";
 const { UP, DOWN, LEFT, RIGHT } = DIRECT;
 const { RESOURCE_IMAGE } = PICTURES();
 const { PLAYER_DESTROY_AUDIO, ATTACK_AUDIO, TANK_DESTROY_AUDIO } = SOUNDS
@@ -249,22 +249,34 @@ export const PlayTank = function (gameInstance) {
 		PLAYER_DESTROY_AUDIO.play();
 	};
 
-	this.renascenc = function (player) {
+	this.renascenc = function (player, multi_sign = false) {
 		this.lives--;
 		this.dir = UP;
 		this.isProtected = true;
 		this.protectedTime = 500;
 		this.isDestroyed = false;
-		var temp = 0;
-		if (player == 1) {
-			temp = 129;
+		if (!multi_sign) {
+			var temp = 0;
+			if (player == 1) {
+				temp = 129;
+			} else {
+				temp = 256;
+			}
+			// console.log('mapOffsetx', this.gameCtx.map.offsetX, 'temp', temp);
+			this.x = temp + this.gameCtx.map.offsetX;
+			this.y = 385 + this.gameCtx.map.offsetY;
 		} else {
-			temp = 256;
+			const site = this.resetPlayerSite(player, gameInstance);
+			this.x = site.x;
+			this.y = site.y;
 		}
-		// console.log('mapOffsetx', this.gameCtx.map.offsetX, 'temp', temp);
-		this.x = temp + this.gameCtx.map.offsetX;
-		this.y = 385 + this.gameCtx.map.offsetY;
 	};
+	this.resetPlayerSite = function (playerIndex, gameInstance) {
+		const site = { x: 0, y: 0 };
+		site.x = MULIPLAYER_LOCATION["p" + playerIndex][0] + gameInstance.map.offsetX;
+		site.y = MULIPLAYER_LOCATION["p" + playerIndex][1] + gameInstance.map.offsetY;
+		return site;
+	}
 
 };
 PlayTank.prototype = new Tank();

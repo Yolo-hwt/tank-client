@@ -160,7 +160,7 @@ const operaSyncHandler = function (obj, gameInstance) {
         }
         case SYNC_SERVER_TYPE.PLAYER_RENASCENC: {
             const { tankIndex } = refers;
-            gameInstance["player" + tankIndex].renascenc(tankIndex);
+            gameInstance["player" + tankIndex].renascenc(tankIndex, gameInstance.gameMode == GAME_MODE.MULTIPLAER_GAME);
             // console.log(gameInstance["player" + tankIndex].x);
             break;
         }
@@ -268,7 +268,7 @@ const multiGameHandler = function (ws, signType, refers) {
             if (players) {
                 for (let i = 1; i <= 4; i++) {
                     if (players["p" + i]) {
-                        dataobj.push({ index: i, name: players["p" + i], state: true, match: true })
+                        dataobj.push({ index: i - 1, name: players["p" + i], state: true, match: true })
                     }
                 }
                 // console.log(dataobj);

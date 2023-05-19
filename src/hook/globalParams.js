@@ -98,6 +98,10 @@ export const MATCH_STATE = {
     MULTI_MATCH_FAILED: 'multiplayer_match_failed',
 
 }
+/*************多人游戏参数 ************/
+export const MULTIPLAYER_DATA = {
+    PLAYER_LIVES: 3
+}
 /**************地图块*****************/
 export const TAGS = {
     WALL: 1,

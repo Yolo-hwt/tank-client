@@ -194,11 +194,18 @@ export const multiplayInitObject = function (gameInstance) {
 
     for (let i = 1; i < 5; i++) {
         gameInstance["player" + i] = new PlayTank(gameInstance);
+        gameInstance["player" + i].lives = 0;//初始化生命为0
+        //玩家图片位置与player1图片的距离
+
+
         //玩家出生点
         gameInstance["player" + i].x = MULIPLAYER_LOCATION["p" + i][0] + gameInstance.map.offsetX;
         gameInstance["player" + i].y = MULIPLAYER_LOCATION["p" + i][1] + gameInstance.map.offsetY;
     }
-    // gameInstance.player2.offsetX = 128; //player2的图片x与图片1相距128
+    gameInstance.player2.offsetX = 128;//player2的图片x与图片1相距128
+    gameInstance.player3.offsetY = 32;
+    gameInstance.player4.offsetX = 128;
+    gameInstance.player4.offsetY = 32;
 
     gameInstance.appearEnemy = 0; //已出现的敌方坦克
     gameInstance.enemyArray = []; //敌方坦克
