@@ -22,8 +22,13 @@ import { EnemyOne, EnemyTwo, EnemyThree } from "@/gameClass/tank";
 import { Prop } from "@/gameClass/prop";
 
 //初始化地图
-export const initMap = function (gameInstance, level, maxEnemy, p1Lives, p2Lives) {
-    gameInstance.map.setMapLevel(level);
+export const initMap = function (gameInstance, level, maxEnemy, p1Lives, p2Lives, multi_sign = false) {
+    if (multi_sign) {
+        gameInstance.map.setMultiMapLevel(level);
+    } else {
+        gameInstance.map.setMapLevel(level);
+    }
+
     gameInstance.map.draw(maxEnemy);
     drawLives(gameInstance, { p1Lives, p2Lives });
 }

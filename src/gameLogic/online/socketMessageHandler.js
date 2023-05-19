@@ -224,7 +224,7 @@ const operaMultiHandler = function (ws, obj) {
             break;
         }
         case GAME_MODE.MULTIPLAER_GAME: {
-            multiGameHandler(ws, signType);
+            multiGameHandler(ws, signType, refers);
             break;
         }
 
@@ -237,9 +237,9 @@ const adventureGameHandler = function (ws, signType, refers) {
     const partner = refers?.partner;
     switch (signType) {
         case MULTI_SERVER_TYPE.ADVENTURE_MATCH_OK: {
-            console.log("匹配成功！");
+            console.log("双人冒险匹配成功！");
             if (partner) {
-                let dataobj = { index: 1, name: partner, state: true, match: true };
+                let dataobj = [{ index: 1, name: partner, state: true, match: true }];
                 // console.log(dataobj);
                 eventBus.emit("matchViewUpdatePlayers", dataobj)
             }
@@ -247,15 +247,42 @@ const adventureGameHandler = function (ws, signType, refers) {
         }
         case MULTI_SERVER_TYPE.ADVENTURE_MATCH_NO: {
             ws.close();
-            console.log("匹配失败！");
-            eventBus.emit("matchViewUpdatePlayers", { match: false })
+            console.log("双人冒险匹配失败！");
+            eventBus.emit("matchViewUpdatePlayers", [{ match: false }])
             break;
         }
+
         default:
             break;
     }
 }
 //
-const multiGameHandler = function (ws, signType) {
-
+const multiGameHandler = function (ws, signType, refers) {
+    //匹配到的对方的id
+    const players = refers?.players;
+    console.log(refers);
+    switch (signType) {
+        case MULTI_SERVER_TYPE.MULTI_MATCH_OK: {
+            console.log("多人对战匹配成功！");
+            let dataobj = [];
+            if (players) {
+                for (let i = 1; i <= 4; i++) {
+                    if (players["p" + i]) {
+                        dataobj.push({ index: i, name: players["p" + i], state: true, match: true })
+                    }
+                }
+                // console.log(dataobj);
+                eventBus.emit("matchViewUpdatePlayers", dataobj);
+            }
+            break;
+        }
+        case MULTI_SERVER_TYPE.MULTI_MATCH_NO: {
+            ws.close();
+            console.log("多人对战匹配失败！");
+            eventBus.emit("matchViewUpdatePlayers", [{ match: false }])
+            break;
+        }
+        default:
+            break;
+    }
 }

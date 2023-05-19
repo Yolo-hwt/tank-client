@@ -21,6 +21,8 @@ export const generateGameInstance = function () {
         map: null, //地图
         player1: null, //玩家1
         player2: null, //玩家2
+        player3: null, //玩家3
+        player4: null, //玩家4
         prop: null,
         enemyArray: [], //敌方坦克
         bulletArray: [], //子弹数组

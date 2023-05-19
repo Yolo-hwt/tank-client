@@ -1,6 +1,6 @@
 //全局变量引入
 import { POS, PICTURES, SOUNDS, GAME_MODE } from "../hook/globalParams";
-const { ONLINE_GAME, ADVENTURE_GAME } = GAME_MODE
+const { ONLINE_GAME, ADVENTURE_GAME, MULTIPLAER_GAME } = GAME_MODE
 const { RESOURCE_IMAGE } = PICTURES();
 const { START_AUDIO } = SOUNDS
 //hook，事件总线引入
@@ -53,7 +53,11 @@ export const Stage = function (gameInstance) {
 				this.levelNum.draw(this.level, 308, 208);
 				//this.ctx.drawImage(RESOURCE_IMAGE,POS["num"][0]+this.level*14,POS["num"][1],14, 14,308, 208,14, 14);
 				//绘制地图
-				initMap(this.gameInstance, level, maxEnemy, p1Lives, p2Lives)
+				if (this.gameInstance.gameMode == MULTIPLAER_GAME) {
+					initMap(this.gameInstance, level, maxEnemy, p1Lives, p2Lives, true)
+				} else {
+					initMap(this.gameInstance, level, maxEnemy, p1Lives, p2Lives, false)
+				}
 			} else if (this.temp == 225 + 600) {
 				//600即调用了600/15次，主要用来停顿
 				this.temp = 225;
@@ -91,6 +95,17 @@ export const Stage = function (gameInstance) {
 						this.gameInstance.clientName,
 						MSG_TYPE_CLIENT.MSG_MULTI,
 						new MultiMsg("adventure_stage_ok", GAME_MODE.ADVENTURE_GAME, MULTI_CLIENT_TYPE.ADVENTURE_CLIENT_STAGEISREADY)
+					);
+					//发送到服务器
+					eventBus.emit('sendtoserver', content)
+				}
+				if (this.gameInstance.gameMode == MULTIPLAER_GAME) {
+					// console.log("adventure stage ok");
+					const content = new SocketMessage(
+						"client",
+						this.gameInstance.clientName,
+						MSG_TYPE_CLIENT.MSG_MULTI,
+						new MultiMsg("multi_stage_ok", GAME_MODE.MULTIPLAER_GAME, MULTI_CLIENT_TYPE.MULTI_CLIENT_STAGEISREADY)
 					);
 					//发送到服务器
 					eventBus.emit('sendtoserver', content)

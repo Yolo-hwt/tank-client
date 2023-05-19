@@ -13,9 +13,7 @@ export const KEY_EVENT_TYPE = {
 }
 //syncdata同步数据类型
 export const SYNC_CLIENT_TYPE = {
-    STAGE_ISREADY: 'stage.isReady',
-    PLAYER_READY_DRAW: "player_draw",
-    BASIC_DATA_CLIENT: "basic_data_client",
+    STAGE_ISREADY: 'stageIsReady',
     PLAYER_PROTECTED: "player_protected",
     OVERANIMATE_ISOK: "over_animation_is_ok",
     ENEMY_ISAPPEAR: "enemy_isappear",
@@ -25,6 +23,9 @@ export const MULTI_CLIENT_TYPE = {
     ADVENTURE_CLIENT_READY: "adventure_client_ok",
     ADVENTURE_CLIENT_STAGEISREADY: "adventure_client_stage_ok",
     ADVENTURE_CLIENT_CLEAR: "adventure_client_clear",
+    MULTI_CLIENT_READY: "multi_client_ok",
+    MULTI_CLIENT_STAGEISREADY: "multi_client_stage_ok",
+    MULTI_CLIENT_CLEAR: "multi_client_clear",
 }
 /************服务器消息类型*************************/
 export const MSG_TYPE_SERVER = {
@@ -79,6 +80,8 @@ export const OPERA_AUDIO_TYPE = {
 export const MULTI_SERVER_TYPE = {
     ADVENTURE_MATCH_OK: "adventure_match_ok",
     ADVENTURE_MATCH_NO: "adventure_match_no",
+    MULTI_MATCH_OK: "multiplayer_match_ok",
+    MULTI_MATCH_NO: "multiplayer_match_no",
 }
 /*************消息实体**************************************/
 //与设备交互的消息主体，通用类

@@ -1,9 +1,9 @@
 import { Keyboard } from "@/gameClass/keyboard";
 // /***************服务器接口数据 */
-export const host = "1.117.143.11";
-export const port = "3030";
-// export const host = "127.0.0.1";
-// export const port = "1024";
+// export const host = "1.117.143.11";
+// export const port = "3030";
+export const host = "127.0.0.1";
+export const port = "1024";
 /***************游戏模式 */
 export const GAME_MODE = {
     LOCAL_GAME: 'local_game',
@@ -89,8 +89,15 @@ export const STATE = {
     GAME_STATE_START: 2,
     GAME_STATE_OVER: 3,
     GAME_STATE_WIN: 4,
+    GAME_STATE_LOSE: 5,
 }
+/*************多人匹配状态 ************/
+export const MATCH_STATE = {
+    MULTI_MATCH_ING: 'multiplayer_match_ing',
+    MULTI_MATCH_SUCCESS: 'multiplayer_match_success',
+    MULTI_MATCH_FAILED: 'multiplayer_match_failed',
 
+}
 /**************地图块*****************/
 export const TAGS = {
     WALL: 1,
@@ -112,6 +119,9 @@ export const DIRECT = {
 
 /**************坦克重生点*****************/
 export const ENEMY_LOCATION = [192, 0, 384] //相对与主游戏区
+
+/**************多人对战玩家重生点*****************/
+export const MULIPLAYER_LOCATION = { p1: [0, 0], p2: [384, 0], p3: [0, 385], p4: [384, 385] } //相对与主游戏区
 
 /**************子弹类型*****************/
 export const BULLET_TYPE = {

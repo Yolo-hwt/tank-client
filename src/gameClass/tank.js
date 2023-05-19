@@ -199,7 +199,8 @@ export const PlayTank = function (gameInstance) {
 	this.lives = 3;//生命值
 	this.isProtected = true;//是否受保护
 	this.protectedTime = 500;//保护时间
-	this.offsetX = 0;//坦克2与坦克1的距离
+	this.offsetX = 0;//与坦克1的x轴距离
+	this.offsetY = 0;//与坦克1的y轴距离
 	this.speed = 3;//坦克的速度
 	this.gameCtx = gameInstance;
 	//坦克绘制方法
@@ -219,7 +220,7 @@ export const PlayTank = function (gameInstance) {
 			this.protectedTime = protectedTime;
 		}
 		this.hit = false;
-		this.ctx.drawImage(RESOURCE_IMAGE, POS["player"][0] + this.offsetX + this.dir * this.size, POS["player"][1], this.size, this.size, this.x, this.y, this.size, this.size);
+		this.ctx.drawImage(RESOURCE_IMAGE, POS["player"][0] + this.offsetX + this.dir * this.size, POS["player"][1] + this.offsetY, this.size, this.size, this.x, this.y, this.size, this.size);
 		if (this.isProtected) {
 			let temp = parseInt((500 - this.protectedTime) / 5) % 2;
 			this.ctx.drawImage(RESOURCE_IMAGE, POS["protected"][0], POS["protected"][1] + 32 * temp, 32, 32, this.x, this.y, 32, 32);

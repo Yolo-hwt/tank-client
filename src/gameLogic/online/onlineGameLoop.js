@@ -19,9 +19,11 @@ const { RESOURCE_IMAGE } = PICTURES()
  * 
  **********************线上游戏循环控制
  */
-export const onlineGameLoop = function (gameInstance) {
+export const onlineGameLoop = function (gameInstance, multi_sign = false) {
+    let content = {};
     switch (gameInstance.gameState) {
         case STATE.GAME_STATE_WAIT:
+            // console.log("wait");
             break;
         case STATE.GAME_STATE_MENU:
             gameInstance.menu.draw();
@@ -33,31 +35,65 @@ export const onlineGameLoop = function (gameInstance) {
             // }
             break;
         case STATE.GAME_STATE_START:
-            onlineDrawAll(gameInstance);
-            if (
-                gameInstance.isGameOver ||
-                (gameInstance.player1.lives <= 0 && gameInstance.player2.lives <= 0)
-            ) {
-                gameInstance.gameState = STATE.GAME_STATE_OVER;
-                gameInstance.map.homeHit();
-                SOUNDS.PLAYER_DESTROY_AUDIO.play();
+            onlineDrawAll(gameInstance, multi_sign);
+            if (!multi_sign) {
+                if (
+                    gameInstance.isGameOver ||
+                    (gameInstance.player1.lives <= 0 && gameInstance.player2.lives <= 0)
+                ) {
+                    gameInstance.gameState = STATE.GAME_STATE_OVER;
+                    gameInstance.map.homeHit();
+                    SOUNDS.PLAYER_DESTROY_AUDIO.play();
+                }
             }
             break;
         case STATE.GAME_STATE_WIN:
-            nextLevel(gameInstance);
+            if (!multi_sign) {
+                nextLevel(gameInstance);
+            } else {
+                //跳转获胜界面
+                eventBus.emit("routeToFinalPage", STATE.GAME_STATE_WIN)
+                //通知服务器清除游戏数据
+                content = new SocketMessage(
+                    "client",
+                    gameInstance.clientName,
+                    MSG_TYPE_CLIENT.MSG_MULTI,
+                    new MultiMsg("client_game_over", GAME_MODE.MULTIPLAER_GAME, MULTI_CLIENT_TYPE.MULTI_CLIENT_CLEAR)
+                );
+                //发送到服务器
+                eventBus.emit('sendtoserver', content)
+
+            }
             break;
         case STATE.GAME_STATE_OVER:
-            onlineGameOver(gameInstance);
+            if (!multi_sign) {
+                onlineGameOver(gameInstance);
+            }
+            break;
+        case STATE.GAME_STATE_LOSE:
+            //跳转失败界面
+            eventBus.emit("routeToFinalPage", STATE.GAME_STATE_LOSE)
+            //通知服务器清除游戏数据
+            content = new SocketMessage(
+                "client",
+                gameInstance.clientName,
+                MSG_TYPE_CLIENT.MSG_MULTI,
+                new MultiMsg("client_game_over", GAME_MODE.MULTIPLAER_GAME, MULTI_CLIENT_TYPE.MULTI_CLIENT_CLEAR)
+            )
+            //发送到服务器
+            eventBus.emit('sendtoserver', content)
             break;
     }
 }
 //绘制所有界面
-const onlineDrawAll = function (gameInstance) {
+const onlineDrawAll = function (gameInstance, multi_sign = false) {
     gameInstance.tankCtx.clearRect(0, 0, SCREEN.SCREEN_WIDTH, SCREEN.SCREEN_HEIGHT);
     onlineDrawPlayer(gameInstance);
     drawLives(gameInstance);
     //实际绘制敌方坦克
-    onlineDrawEnemyTanks(gameInstance);
+    if (!multi_sign) {
+        onlineDrawEnemyTanks(gameInstance);
+    }
     //
     onlineDrawBullet(gameInstance);
     onlineDrawCrack(gameInstance);
@@ -75,11 +111,17 @@ const onlineDrawAll = function (gameInstance) {
     // }
 }
 const onlineDrawPlayer = function (gameInstance) {
-    if (gameInstance.player1.lives > 0) {
+    if (gameInstance.player1 && gameInstance.player1.lives > 0) {
         gameInstance.player1.draw(1);
     }
-    if (gameInstance.player2.lives > 0) {
+    if (gameInstance.player2 && gameInstance.player2.lives > 0) {
         gameInstance.player2.draw(2);
+    }
+    if (gameInstance.player3 && gameInstance.player3.lives > 0) {
+        gameInstance.player3.draw(3);
+    }
+    if (gameInstance.player4 && gameInstance.player4.lives > 0) {
+        gameInstance.player4.draw(4);
     }
 }
 const onlineDrawEnemyTanks = function (gameInstance) {

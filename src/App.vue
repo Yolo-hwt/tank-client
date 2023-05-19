@@ -49,6 +49,10 @@ export default {
             eventBus.emit("adventureViewGetWsClient", wsClientInstance)
             break;
           }
+          case "multiplayer": {
+            eventBus.emit("multiplayerViewGetWsClient", wsClientInstance)
+            break;
+          }
           default:
             break;
         }
@@ -92,6 +96,12 @@ export default {
           }
           case GAME_MODE.MULTIPLAER_GAME: {//多人对战
             // console.log(type);
+            const content = { name: userName.value, mode: GAME_MODE.MULTIPLAER_GAME };
+            router.push({
+              name: "match",
+              path: "/matchpage",
+              query: content
+            });
             break;
           }
 

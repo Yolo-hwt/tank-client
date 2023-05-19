@@ -1,9 +1,10 @@
 //全局参数引入
-import { NecessarykeyCode, DIRECT, STATE, CRACK_TYPE } from "@/hook/globalParams";
+import { NecessarykeyCode, DIRECT, STATE, CRACK_TYPE, SCREEN, MULIPLAYER_LOCATION } from "@/hook/globalParams";
 const { DOWN } = DIRECT
 const {
     GAME_STATE_INIT,
 } = STATE;
+const { SCREEN_HEIGHT, SCREEN_WIDTH } = SCREEN
 //socketMessage参数引入
 import {
     SocketMessage,
@@ -16,6 +17,10 @@ const { MSG_KEY } = MSG_TYPE_CLIENT
 //类引入
 import { MyWebSocket } from "@/socket/socketClient";
 import { EnemyOne, EnemyTwo, EnemyThree } from "@/gameClass/tank";
+import { Menu } from "@/gameClass/menu";
+import { Stage } from "@/gameClass/stage";
+import { Map } from "@/gameClass/map";
+import { PlayTank } from "@/gameClass/tank";
 //eventBus
 //hook，事件总线引入
 import { eventBus } from "@/hook/eventBus";
@@ -77,6 +82,7 @@ export const onlineKeyEventHandler = function (e, keyType, name) {
 /***********同步数据操作辅助函数 */
 //根据数据层次同步服务器数据
 export const syncBasicDataByServerData = function (dataobj, gameInstance) {
+    // console.log(dataobj);
     const { level, target, value } = dataobj;
     if (level == 1) {
         gameInstance[target[0]] = value;
@@ -178,6 +184,36 @@ export const skipLevelByServerData = function (gameInstance, level) {
     }
     gameInstance.stage.init(gameInstance.level);
     gameInstance.gameState = GAME_STATE_INIT;
+}
+
+//四人联机初始化数据对象
+export const multiplayInitObject = function (gameInstance) {
+    gameInstance.menu = new Menu(gameInstance);
+    gameInstance.stage = new Stage(gameInstance);
+    gameInstance.map = new Map(gameInstance);
+
+    for (let i = 1; i < 5; i++) {
+        gameInstance["player" + i] = new PlayTank(gameInstance);
+        //玩家出生点
+        gameInstance["player" + i].x = MULIPLAYER_LOCATION["p" + i][0] + gameInstance.map.offsetX;
+        gameInstance["player" + i].y = MULIPLAYER_LOCATION["p" + i][1] + gameInstance.map.offsetY;
+    }
+    // gameInstance.player2.offsetX = 128; //player2的图片x与图片1相距128
+
+    gameInstance.appearEnemy = 0; //已出现的敌方坦克
+    gameInstance.enemyArray = []; //敌方坦克
+    gameInstance.bulletArray = []; //子弹数组
+    gameInstance.keys = []; //记录按下的按键
+    gameInstance.crackArray = []; //爆炸数组
+    gameInstance.isGameOver = false;
+    gameInstance.overX = 176;
+    gameInstance.overY = 384;
+    gameInstance.overCtx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    gameInstance.emenyStopTime = 0;
+    gameInstance.homeProtectedTime = -1;
+    gameInstance.propTime = 1000;
+    //玩家数量为4
+    gameInstance.map.playNum = 4;
 }
 
 

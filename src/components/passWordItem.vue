@@ -24,9 +24,10 @@ export default {
       }
     })
     watch(inputValue, (newValue, oldValue) => {
-      if (newValue != "") {
-        emit('update:value', newValue)
-      }
+
+      // console.log("psd change", newValue);
+      emit('update:value', newValue)
+
     });
     watch(() => props.focus, async (newValue, oldValue) => {
       if (newValue == true) {
