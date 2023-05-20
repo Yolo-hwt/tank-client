@@ -1,5 +1,5 @@
 //全局变量引入
-import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE, MULIPLAYER_LOCATION } from "@/hook/globalParams";
+import { POS, DIRECT, PICTURES, SOUNDS, CRACK_TYPE, MULIPLAYER_LOCATION, MULTIPLAYER_DATA } from "@/hook/globalParams";
 const { UP, DOWN, LEFT, RIGHT } = DIRECT;
 const { RESOURCE_IMAGE } = PICTURES();
 const { PLAYER_DESTROY_AUDIO, ATTACK_AUDIO, TANK_DESTROY_AUDIO } = SOUNDS
@@ -196,9 +196,10 @@ SelectTank.prototype = new Tank();
 export const PlayTank = function (gameInstance) {
 	this.gameInstance = gameInstance;
 	this.ctx = gameInstance.tankCtx;
-	this.lives = 3;//生命值
+	this.lives = MULTIPLAYER_DATA.PLAYER_LIVES;//生命值
+	this.bloods = MULTIPLAYER_DATA.PLAYER_BLOODS;//血条
 	this.isProtected = true;//是否受保护
-	this.protectedTime = 500;//保护时间
+	this.protectedTime = MULTIPLAYER_DATA.PROTECTED_TIME;//保护时间
 	this.offsetX = 0;//与坦克1的x轴距离
 	this.offsetY = 0;//与坦克1的y轴距离
 	this.speed = 3;//坦克的速度
@@ -250,10 +251,11 @@ export const PlayTank = function (gameInstance) {
 	};
 
 	this.renascenc = function (player, multi_sign = false) {
+		this.bloods = MULTIPLAYER_DATA.PLAYER_BLOODS;//血条
 		this.lives--;
 		this.dir = UP;
 		this.isProtected = true;
-		this.protectedTime = 500;
+		this.protectedTime = MULTIPLAYER_DATA.PROTECTED_TIME;
 		this.isDestroyed = false;
 		if (!multi_sign) {
 			var temp = 0;

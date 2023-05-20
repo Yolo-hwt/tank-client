@@ -119,6 +119,6 @@ export const MultiMsg = function (msg, multiType, signType, refers = {}) {
 export const KeyEventMsg = function (msg, code, keyType, refers = {}) {
     NormalMsg.call(this, msg);
     this.code = code;
-    this.keyType = keyType
-    this.refers = refers
+    this.keyType = keyType;
+    this.refers = refers;
 }

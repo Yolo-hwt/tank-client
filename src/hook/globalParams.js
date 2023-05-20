@@ -1,9 +1,9 @@
 import { Keyboard } from "@/gameClass/keyboard";
 // /***************服务器接口数据 */
-// export const host = "1.117.143.11";
-// export const port = "3030";
-export const host = "127.0.0.1";
-export const port = "1024";
+export const host = "1.117.143.11";
+export const port = "3030";
+// export const host = "127.0.0.1";
+// export const port = "1024";
 /***************游戏模式 */
 export const GAME_MODE = {
     LOCAL_GAME: 'local_game',
@@ -100,7 +100,11 @@ export const MATCH_STATE = {
 }
 /*************多人游戏参数 ************/
 export const MULTIPLAYER_DATA = {
-    PLAYER_LIVES: 3
+    PLAYER_LIVES: 3,//基础生命值
+    PLAYER_BLOODS: 3,//单条生命血条
+    PROTECTED_TIME: 300,//无敌金身时间，200x20ms循环=4000ms
+    MATCH_ADVENTURE_TIMES: 15,
+    MATCH_MULTI_TIMES: 5,
 }
 /**************地图块*****************/
 export const TAGS = {

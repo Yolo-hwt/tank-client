@@ -67,7 +67,8 @@ export const onlineKeyEventHandler = function (e, keyType, name) {
     const code = e.keyCode;
     if (keyCodeFilter(code)) {
         //提取状态变量生成消息体
-        const msg = new KeyEventMsg("", code, keyType);
+        const msg = new KeyEventMsg("", code, keyType, { name });
+        // console.log(msg);
         //包装消息体为客户端消息
         const content = new SocketMessage("client", name, MSG_KEY, msg);
         //console.log(code, content);
@@ -135,13 +136,8 @@ export const addBulletByServerData = function (gameInstance, tankIndex, type, di
     if (type == 2) {//ai坦克
         tankTarget = gameInstance.enemyArray[tankIndex]
     } else if (type == 1) {//player
-        if (tankIndex == 1) {
-            tankTarget = gameInstance.player1;
-        } else if (tankIndex == 2) {
-            tankTarget = gameInstance.player2
-        }
+        tankTarget = gameInstance["player" + tankIndex]
     }
-
     //添加到子弹数组
     tankTarget.bullet = new Bullet(tankTarget, type, dir, gameInstance)
     tankTarget.bullet.x = tempX;
@@ -161,11 +157,7 @@ export const addCrackByServerData = function (gameInstance, refers) {
         if (tankType == 2) {//ai坦克
             item = gameInstance.enemyArray[tankIndex]
         } else if (tankType == 1) {//player
-            if (tankIndex == 1) {
-                item = gameInstance.player1;
-            } else if (tankIndex == 2) {
-                item = gameInstance.player2
-            }
+            item = gameInstance["player" + tankIndex]
         }
     }
 
